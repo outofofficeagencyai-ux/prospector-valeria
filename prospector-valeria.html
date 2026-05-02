@@ -565,7 +565,7 @@ async function buscar() {
   const key = document.getElementById('api-key').value.trim();
   const zona = document.getElementById('zona').value.trim();
   const tipo = document.getElementById('tipo').value;
-  const radio = document.getElementById('radio').value;
+  const radio = parseInt(document.getElementById('radio').value);
   if (!key || !zona) { alert('Completa API key y zona'); return; }
 
   const btn = document.getElementById('btn-buscar');
@@ -574,30 +574,55 @@ async function buscar() {
   const pf = document.getElementById('prog-fill');
   const pm = document.getElementById('prog-msg');
   pw.style.display = 'block';
-  setP(pf, pm, 8, 'Geocodificando zona...');
+  setP(pf, pm, 8, 'Cargando Google Maps...');
+
+  // Cargar Google Maps JS API dinámicamente
+  await loadGoogleMaps(key);
 
   try {
-    const geoR = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(zona)}&key=${key}`);
-    const geoD = await geoR.json();
-    if (geoD.status !== 'OK') throw new Error(`Zona no encontrada (${geoD.status})`);
-    const loc = geoD.results[0].geometry.location;
-    setP(pf, pm, 22, `✓ ${geoD.results[0].formatted_address}`);
+    setP(pf, pm, 15, 'Geocodificando zona...');
+    const geocoder = new google.maps.Geocoder();
+    const geoResult = await new Promise((res, rej) => {
+      geocoder.geocode({ address: zona }, (results, status) => {
+        if (status === 'OK') res(results[0]);
+        else rej(new Error('Zona no encontrada (' + status + ')'));
+      });
+    });
 
-    const pR = await fetch(`https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${loc.lat},${loc.lng}&radius=${radio}&type=${tipo}&language=es&key=${key}`);
-    const pD = await pR.json();
-    if (pD.status !== 'OK' && pD.status !== 'ZERO_RESULTS') throw new Error(`Places API: ${pD.status} — ${pD.error_message || ''}`);
+    const loc = geoResult.geometry.location;
+    setP(pf, pm, 25, '✓ ' + geoResult.formatted_address);
 
-    const places = pD.results || [];
-    if (!places.length) { setP(pf, pm, 100, '⚠ Sin resultados'); return; }
-    setP(pf, pm, 35, `✓ ${places.length} lugares. Extrayendo detalles...`);
+    const service = new google.maps.places.PlacesService(document.createElement('div'));
+
+    const places = await new Promise((res, rej) => {
+      service.nearbySearch({
+        location: loc,
+        radius: radio,
+        type: tipo,
+        language: 'es'
+      }, (results, status) => {
+        if (status === google.maps.places.PlacesServiceStatus.OK) res(results);
+        else if (status === google.maps.places.PlacesServiceStatus.ZERO_RESULTS) res([]);
+        else rej(new Error('Places API: ' + status));
+      });
+    });
+
+    if (!places.length) { setP(pf, pm, 100, '⚠ Sin resultados en esa zona'); return; }
+    setP(pf, pm, 35, '✓ ' + places.length + ' lugares. Extrayendo detalles...');
 
     let done = 0;
     const total = Math.min(places.length, 20);
-    for (const p of places.slice(0, 20)) {
-      const dR = await fetch(`https://maps.googleapis.com/maps/api/place/details/json?place_id=${p.place_id}&fields=name,website,formatted_phone_number,url&language=es&key=${key}`);
 
-      const dD = await dR.json();
-      const d = dD.result || {};
+    for (const p of places.slice(0, 20)) {
+      const d = await new Promise((res) => {
+        service.getDetails({
+          placeId: p.place_id,
+          fields: ['name', 'website', 'formatted_phone_number', 'url']
+        }, (result, status) => {
+          res(status === google.maps.places.PlacesServiceStatus.OK ? result : {});
+        });
+      });
+
       const lead = {
         id: Date.now() + Math.random(),
         nombre: d.name || p.name,
@@ -606,7 +631,7 @@ async function buscar() {
         email: '',
         telefono: d.formatted_phone_number || '',
         instagram: '',
-        thefork: 'nd', // nd = no verificado
+        thefork: 'nd',
         maps_url: d.url || '',
         notas: '', estado: '',
         ts: new Date().toLocaleDateString('es-ES')
@@ -614,19 +639,33 @@ async function buscar() {
       lead.prioridad = calcPrioridad(lead);
       if (!leads.find(l => l.nombre.toLowerCase() === lead.nombre.toLowerCase())) leads.unshift(lead);
       done++;
-      setP(pf, pm, 35 + Math.round((done/total)*60), `${done}/${total} — ${d.name || p.name}`);
-      await new Promise(r => setTimeout(r, 100));
+      setP(pf, pm, 35 + Math.round((done/total)*60), done + '/' + total + ' — ' + (d.name || p.name));
+      await new Promise(r => setTimeout(r, 80));
     }
 
     save(); render();
-    setP(pf, pm, 100, `✓ ${done} leads añadidos`);
+    setP(pf, pm, 100, '✓ ' + done + ' leads añadidos');
   } catch(err) {
-    pm.textContent = `✗ ${err.message}`;
+    pm.textContent = '✗ ' + err.message;
     pm.style.color = 'var(--rojo)';
   }
 
   btn.disabled = false; btn.textContent = '⚡ Buscar ahora';
   setTimeout(() => { pw.style.display = 'none'; pf.style.width = '0%'; pm.style.color = ''; }, 5000);
+}
+
+let googleMapsLoaded = false;
+function loadGoogleMaps(key) {
+  if (googleMapsLoaded && window.google && window.google.maps) return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    if (window.google && window.google.maps) { googleMapsLoaded = true; resolve(); return; }
+    const script = document.createElement('script');
+    script.src = 'https://maps.googleapis.com/maps/api/js?key=' + key + '&libraries=places&language=es';
+    script.async = true;
+    script.onload = () => { googleMapsLoaded = true; resolve(); };
+    script.onerror = () => reject(new Error('No se pudo cargar Google Maps. Verifica la API key.'));
+    document.head.appendChild(script);
+  });
 }
 
 function setP(fill, msg, pct, text) { fill.style.width = pct + '%'; msg.textContent = text; }
