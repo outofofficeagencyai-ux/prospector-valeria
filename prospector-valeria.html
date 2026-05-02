@@ -577,14 +577,13 @@ async function buscar() {
   setP(pf, pm, 8, 'Geocodificando zona...');
 
   try {
-    const PROXY = 'https://api.allorigins.win/raw?url=';
-    const geoR = await fetch(`${PROXY}${encodeURIComponent(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(zona)}&key=${key}`)}`);
+    const geoR = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(zona)}&key=${key}`);
     const geoD = await geoR.json();
     if (geoD.status !== 'OK') throw new Error(`Zona no encontrada (${geoD.status})`);
     const loc = geoD.results[0].geometry.location;
     setP(pf, pm, 22, `✓ ${geoD.results[0].formatted_address}`);
 
-    const pR = await fetch(`${PROXY}${encodeURIComponent(`https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${loc.lat},${loc.lng}&radius=${radio}&type=${tipo}&language=es&key=${key}`)}`);
+    const pR = await fetch(`https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${loc.lat},${loc.lng}&radius=${radio}&type=${tipo}&language=es&key=${key}`);
     const pD = await pR.json();
     if (pD.status !== 'OK' && pD.status !== 'ZERO_RESULTS') throw new Error(`Places API: ${pD.status} — ${pD.error_message || ''}`);
 
@@ -595,7 +594,7 @@ async function buscar() {
     let done = 0;
     const total = Math.min(places.length, 20);
     for (const p of places.slice(0, 20)) {
-      const dR = await fetch(`${PROXY}${encodeURIComponent(`https://maps.googleapis.com/maps/api/place/details/json?place_id=${p.place_id}&fields=name,website,formatted_phone_number,url&language=es&key=${key}`)}`);
+      const dR = await fetch(`https://maps.googleapis.com/maps/api/place/details/json?place_id=${p.place_id}&fields=name,website,formatted_phone_number,url&language=es&key=${key}`);
 
       const dD = await dR.json();
       const d = dD.result || {};
