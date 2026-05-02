@@ -597,6 +597,7 @@ let tfModalActual = 'nd';
 try { leads = JSON.parse(localStorage.getItem('pv-leads3') || '[]'); } catch(e) {}
 
 //
+const CADENAS = ["subway","mcdonald","burger king","kfc","pizza hut","domino","telepizza","fosters","vips","starbucks","dunkin","five guys","popeyes","taco bell","hard rock cafe","hooters","sushi daily","pans","la tagliatella","grosso napoletano"];
 function esCadena(nombre) { return CADENAS.some(c => nombre.toLowerCase().includes(c)); }
 
 //
