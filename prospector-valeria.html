@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prospector ValerIA</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;800&display=swap');
+
+  :root {
+    --negro: #080808;
+    --champagne: #C9A96E;
+    --champagne-light: #E8D5B0;
+    --champagne-dark: #8B6F3E;
+    --gris1: #111;
+    --gris2: #1a1a1a;
+    --gris3: #252525;
+    --texto: #888;
+    --blanco: #fff;
+    --verde: #4ade80;
+    --rojo: #f87171;
+    --amarillo: #fbbf24;
+    --azul: #60a5fa;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--negro); color: var(--blanco); font-family: 'DM Mono', monospace; min-height: 100vh; }
+
+  header {
+    padding: 1.4rem 2rem; border-bottom: 1px solid #1a1a1a;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .logo { font-family: 'Bodoni Moda', serif; font-size: 1.35rem; color: var(--champagne); letter-spacing: 0.04em; }
+  .logo-sub { font-size: 0.52rem; color: var(--texto); letter-spacing: 0.3em; text-transform: uppercase; margin-top: 2px; }
+
+  .stats { display: flex; gap: 2rem; }
+  .stat { text-align: right; }
+  .stat-n { font-size: 1.4rem; color: var(--champagne); line-height: 1; }
+  .stat-l { font-size: 0.5rem; color: var(--texto); letter-spacing: 0.2em; text-transform: uppercase; }
+
+  main { display: grid; grid-template-columns: 290px 1fr; height: calc(100vh - 78px); }
+
+  aside {
+    border-right: 1px solid #1a1a1a; padding: 1.1rem;
+    display: flex; flex-direction: column; gap: 0.9rem; overflow-y: auto;
+  }
+
+  .slabel {
+    font-size: 0.5rem; letter-spacing: 0.28em; text-transform: uppercase;
+    color: var(--champagne-dark); margin-bottom: 0.5rem;
+    display: flex; align-items: center; gap: 0.5rem;
+  }
+  .slabel::after { content: ''; flex: 1; height: 1px; background: #1e1e1e; }
+
+  .igroup { display: flex; flex-direction: column; gap: 0.3rem; }
+  .ilabel { font-size: 0.52rem; color: var(--texto); letter-spacing: 0.12em; text-transform: uppercase; }
+
+  input, select, textarea {
+    background: var(--gris2); border: 1px solid #252525; color: var(--blanco);
+    font-family: 'DM Mono', monospace; font-size: 0.7rem;
+    padding: 0.5rem 0.65rem; border-radius: 4px; outline: none; width: 100%;
+    transition: border-color 0.2s;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--champagne-dark); }
+  input::placeholder { color: #2e2e2e; }
+  textarea { resize: vertical; min-height: 60px; line-height: 1.6; }
+
+  .btn-main {
+    width: 100%; padding: 0.8rem; background: var(--champagne); color: var(--negro); border: none;
+    font-family: 'Syne', sans-serif; font-size: 0.66rem; font-weight: 800;
+    letter-spacing: 0.2em; text-transform: uppercase; cursor: pointer; border-radius: 4px; transition: all 0.2s;
+  }
+  .btn-main:hover { background: var(--champagne-light); }
+  .btn-main:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  .btn-sec {
+    width: 100%; padding: 0.55rem; background: transparent; color: var(--texto); border: 1px solid #252525;
+    font-family: 'DM Mono', monospace; font-size: 0.58rem; letter-spacing: 0.12em;
+    text-transform: uppercase; cursor: pointer; border-radius: 4px; transition: all 0.2s;
+  }
+  .btn-sec:hover { border-color: var(--champagne-dark); color: var(--champagne); }
+
+  .prog-wrap { display: none; margin-top: 0.5rem; }
+  .prog-bar { width: 100%; height: 2px; background: #1a1a1a; border-radius: 2px; overflow: hidden; }
+  .prog-fill { height: 100%; background: var(--champagne); width: 0%; transition: width 0.4s ease; }
+  .prog-msg { font-size: 0.55rem; color: var(--texto); margin-top: 0.35rem; line-height: 1.5; }
+
+  .content { display: flex; flex-direction: column; overflow: hidden; }
+
+  .topbar {
+    padding: 0.75rem 1.1rem; border-bottom: 1px solid #1a1a1a;
+    display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
+  }
+
+  .chip {
+    padding: 0.3rem 0.7rem; background: var(--gris2); border: 1px solid #252525;
+    color: var(--texto); font-family: 'DM Mono', monospace; font-size: 0.56rem;
+    letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; border-radius: 20px; transition: all 0.2s;
+  }
+  .chip.on { background: rgba(201,169,110,0.1); border-color: var(--champagne-dark); color: var(--champagne); }
+
+  .rcount { margin-left: auto; font-size: 0.56rem; color: var(--texto); }
+  .rcount b { color: var(--champagne); }
+
+  .btn-csv {
+    padding: 0.3rem 0.7rem; background: transparent; border: 1px solid #252525;
+    color: var(--texto); font-family: 'DM Mono', monospace; font-size: 0.56rem;
+    letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; border-radius: 4px; transition: all 0.2s;
+  }
+  .btn-csv:hover { border-color: var(--champagne-dark); color: var(--champagne); }
+
+  .table-wrap { flex: 1; overflow: auto; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 0.68rem; }
+  thead tr { background: var(--gris2); position: sticky; top: 0; z-index: 5; }
+  th {
+    padding: 0.6rem 0.75rem; text-align: left; font-size: 0.46rem;
+    letter-spacing: 0.18em; text-transform: uppercase; color: var(--champagne-dark);
+    font-weight: 400; white-space: nowrap; border-bottom: 1px solid #252525;
+  }
+  tbody tr { border-bottom: 1px solid #0f0f0f; transition: background 0.12s; }
+  tbody tr:hover { background: rgba(255,255,255,0.018); }
+  td { padding: 0.6rem 0.75rem; vertical-align: middle; }
+
+  .td-n { font-family: 'Syne', sans-serif; font-size: 0.72rem; font-weight: 600; max-width: 150px; }
+  .td-web a {
+    color: var(--champagne); text-decoration: none; font-size: 0.58rem;
+    max-width: 130px; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .td-web a:hover { text-decoration: underline; }
+
+  .dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+  .dg { background: var(--verde); box-shadow: 0 0 5px var(--verde); }
+  .dy { background: var(--amarillo); }
+  .dr { background: #333; }
+
+  .prio { display: flex; align-items: center; gap: 5px; font-size: 0.6rem; }
+  .prio.alta { color: var(--verde); }
+  .prio.media { color: var(--amarillo); }
+  .prio.baja { color: #444; }
+
+  /* THEFORK BADGE */
+  .tf-si {
+    display: inline-flex; align-items: center; gap: 3px;
+    padding: 2px 6px; border-radius: 3px; font-size: 0.5rem; letter-spacing: 0.06em;
+    background: rgba(96,165,250,0.08); color: var(--azul); border: 1px solid rgba(96,165,250,0.2);
+  }
+  .tf-no {
+    display: inline-flex; align-items: center; gap: 3px;
+    padding: 2px 6px; border-radius: 3px; font-size: 0.5rem; letter-spacing: 0.06em;
+    background: rgba(74,222,128,0.08); color: var(--verde); border: 1px solid rgba(74,222,128,0.2);
+  }
+  .tf-nd { color: #2a2a2a; font-size: 0.54rem; }
+
+  /* ARGUMENTO BADGE */
+  .arg-comision {
+    font-size: 0.46rem; color: var(--azul); letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  .arg-perdida {
+    font-size: 0.46rem; color: var(--verde); letter-spacing: 0.06em; text-transform: uppercase;
+  }
+
+  /* LINKS RÁPIDOS */
+  .quick-links { display: flex; gap: 3px; align-items: center; }
+  .ql {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 22px; height: 22px; border-radius: 3px; font-size: 0.6rem;
+    text-decoration: none; border: 1px solid #252525; color: var(--texto);
+    transition: all 0.2s; cursor: pointer; background: transparent;
+  }
+  .ql:hover { border-color: var(--champagne-dark); color: var(--champagne); background: rgba(201,169,110,0.06); }
+  .ql.ig-found { border-color: rgba(201,169,110,0.4); color: var(--champagne); }
+  .ql.ig-searching { animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+  .btn-act {
+    padding: 0.22rem 0.5rem; background: transparent; border: 1px solid #252525;
+    color: var(--texto); font-family: 'DM Mono', monospace; font-size: 0.5rem;
+    letter-spacing: 0.06em; cursor: pointer; border-radius: 3px; transition: all 0.2s; white-space: nowrap;
+  }
+  .btn-act:hover { border-color: var(--champagne-dark); color: var(--champagne); }
+  .btn-act.ai-btn { border-color: rgba(201,169,110,0.25); color: var(--champagne-dark); }
+  .btn-act.ai-btn:hover { background: rgba(201,169,110,0.08); border-color: var(--champagne); color: var(--champagne); }
+  .btn-del { color: #252525 !important; }
+  .btn-del:hover { border-color: var(--rojo) !important; color: var(--rojo) !important; }
+
+  .status-badge {
+    display: inline-flex; padding: 2px 5px; border-radius: 3px;
+    font-size: 0.46rem; letter-spacing: 0.08em; text-transform: uppercase; margin-top: 2px;
+    background: rgba(201,169,110,0.07); color: var(--champagne-dark); border: 1px solid rgba(201,169,110,0.13);
+  }
+
+  .empty {
+    display: none; flex-direction: column; align-items: center; justify-content: center;
+    height: 100%; gap: 0.8rem; color: #2a2a2a; text-align: center; padding: 2rem;
+  }
+  .empty-icon { font-size: 2.5rem; }
+  .empty-t { font-family: 'Bodoni Moda', serif; font-size: 1rem; }
+  .empty-s { font-size: 0.6rem; line-height: 1.7; max-width: 280px; }
+
+  /* MODAL */
+  .modal-bg {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.92);
+    z-index: 100; display: none; align-items: center; justify-content: center;
+  }
+  .modal-bg.show { display: flex; }
+
+  .modal {
+    background: var(--gris1); border: 1px solid #252525; border-radius: 10px;
+    padding: 1.5rem; width: 560px; max-width: 95vw;
+    display: flex; flex-direction: column; gap: 1rem;
+    max-height: 90vh; overflow-y: auto;
+  }
+
+  .modal-header { display: flex; flex-direction: column; gap: 4px; }
+  .modal-t { font-family: 'Bodoni Moda', serif; font-size: 1.1rem; color: var(--champagne); }
+  .modal-meta { font-size: 0.56rem; color: var(--texto); display: flex; gap: 0.6rem; flex-wrap: wrap; }
+  .modal-arg {
+    font-size: 0.54rem; padding: 3px 8px; border-radius: 3px; font-weight: 500;
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .modal-arg.comision { background: rgba(96,165,250,0.1); color: var(--azul); border: 1px solid rgba(96,165,250,0.2); }
+  .modal-arg.perdida { background: rgba(74,222,128,0.1); color: var(--verde); border: 1px solid rgba(74,222,128,0.2); }
+
+  .modal-tabs { display: flex; gap: 4px; background: var(--gris2); padding: 4px; border-radius: 6px; }
+  .mtab {
+    flex: 1; padding: 0.42rem; background: transparent; border: none;
+    color: var(--texto); font-family: 'DM Mono', monospace; font-size: 0.54rem;
+    letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; border-radius: 4px; transition: all 0.2s;
+  }
+  .mtab.on { background: var(--gris3); color: var(--champagne); }
+
+  .tab-panel { display: none; flex-direction: column; gap: 0.7rem; }
+  .tab-panel.on { display: flex; }
+
+  .tono-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+  .tono-btn {
+    padding: 0.42rem; background: var(--gris2); border: 1px solid #252525;
+    color: var(--texto); font-family: 'DM Mono', monospace; font-size: 0.52rem;
+    letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer;
+    border-radius: 4px; transition: all 0.2s; text-align: center;
+  }
+  .tono-btn.on { background: rgba(201,169,110,0.1); border-color: var(--champagne-dark); color: var(--champagne); }
+
+  .ctx-input {
+    background: var(--gris2); border: 1px solid #252525; color: var(--blanco);
+    font-family: 'DM Mono', monospace; font-size: 0.66rem;
+    padding: 0.5rem 0.65rem; border-radius: 4px; outline: none; width: 100%;
+    resize: none; min-height: 48px; line-height: 1.5; transition: border-color 0.2s;
+  }
+  .ctx-input:focus { border-color: var(--champagne-dark); }
+  .ctx-input::placeholder { color: #2a2a2a; }
+
+  .msg-output {
+    background: var(--gris2); border: 1px solid #252525; border-radius: 6px;
+    padding: 1rem 1rem 0.8rem; font-size: 0.68rem; line-height: 1.85; color: var(--blanco);
+    min-height: 110px; white-space: pre-wrap; position: relative;
+  }
+  .msg-placeholder { color: #2a2a2a; font-style: italic; }
+
+  .copy-btn {
+    position: absolute; top: 0.5rem; right: 0.5rem;
+    padding: 0.22rem 0.55rem; background: var(--gris3); border: 1px solid #333;
+    color: var(--texto); font-family: 'DM Mono', monospace; font-size: 0.5rem;
+    letter-spacing: 0.08em; cursor: pointer; border-radius: 3px; transition: all 0.2s;
+  }
+  .copy-btn:hover { border-color: var(--champagne); color: var(--champagne); }
+  .copy-btn.copied { color: var(--verde); border-color: var(--verde); }
+
+  .modal-row { display: flex; gap: 0.5rem; justify-content: flex-end; }
+
+  /* THEFORK TOGGLE en modal */
+  .tf-toggle { display: flex; gap: 5px; }
+  .tf-opt {
+    flex: 1; padding: 0.45rem; background: var(--gris2); border: 1px solid #252525;
+    color: var(--texto); font-family: 'DM Mono', monospace; font-size: 0.54rem;
+    letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer;
+    border-radius: 4px; transition: all 0.2s; text-align: center;
+  }
+  .tf-opt.on-si { background: rgba(96,165,250,0.1); border-color: rgba(96,165,250,0.4); color: var(--azul); }
+  .tf-opt.on-no { background: rgba(74,222,128,0.1); border-color: rgba(74,222,128,0.4); color: var(--verde); }
+
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: translateY(0); } }
+  tbody tr { animation: fadeUp 0.18s ease forwards; }
+  @keyframes gen-pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+  ::-webkit-scrollbar { width: 3px; height: 3px; }
+  ::-webkit-scrollbar-track { background: var(--negro); }
+  ::-webkit-scrollbar-thumb { background: #252525; border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="logo">Prospector ValerIA</div>
+    <div class="logo-sub">Out of Office · v3 — TheFork · Instagram · Outreach IA</div>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="stat-n" id="st-total">0</div><div class="stat-l">Leads</div></div>
+    <div class="stat"><div class="stat-n" id="st-alta">0</div><div class="stat-l">Alta prioridad</div></div>
+    <div class="stat"><div class="stat-n" id="st-tf">0</div><div class="stat-l">Sin TheFork</div></div>
+  </div>
+</header>
+
+<main>
+  <aside>
+    <div>
+      <div class="slabel">Búsqueda automática</div>
+      <div class="igroup">
+        <div class="ilabel">Google Places API Key</div>
+        <input type="password" id="api-key" value="AIzaSyB8o696Qy-Dk3F6uEWi7_aDy6WzfWIobsI">
+      </div>
+      <div class="igroup" style="margin-top:0.5rem;">
+        <div class="ilabel">Zona</div>
+        <input type="text" id="zona" value="Costa Adeje, Tenerife">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:0.5rem;">
+        <div class="igroup">
+          <div class="ilabel">Tipo</div>
+          <select id="tipo">
+            <option value="restaurant">Restaurantes</option>
+            <option value="bar">Bares</option>
+            <option value="cafe">Cafeterías</option>
+            <option value="lodging">Hoteles</option>
+          </select>
+        </div>
+        <div class="igroup">
+          <div class="ilabel">Radio</div>
+          <select id="radio">
+            <option value="1000">1 km</option>
+            <option value="2000" selected>2 km</option>
+            <option value="3000">3 km</option>
+            <option value="5000">5 km</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn-main" id="btn-buscar" onclick="buscar()" style="margin-top:0.7rem;">⚡ Buscar ahora</button>
+      <div class="prog-wrap" id="prog-wrap">
+        <div class="prog-bar"><div class="prog-fill" id="prog-fill"></div></div>
+        <div class="prog-msg" id="prog-msg"></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="slabel">Añadir manual</div>
+      <div class="igroup"><div class="ilabel">Nombre</div><input type="text" id="m-nombre" placeholder="Restaurante El Mar"></div>
+      <div class="igroup" style="margin-top:0.4rem;"><div class="ilabel">Web</div><input type="url" id="m-web" placeholder="https://..."></div>
+      <div class="igroup" style="margin-top:0.4rem;"><div class="ilabel">Email</div><input type="email" id="m-email" placeholder="info@..."></div>
+      <div class="igroup" style="margin-top:0.4rem;"><div class="ilabel">Teléfono</div><input type="text" id="m-tel" placeholder="+34 922..."></div>
+      <div class="igroup" style="margin-top:0.4rem;"><div class="ilabel">Zona</div><input type="text" id="m-zona" placeholder="Costa Adeje"></div>
+      <div class="igroup" style="margin-top:0.4rem;">
+        <div class="ilabel">¿Tiene TheFork?</div>
+        <select id="m-tf">
+          <option value="nd">No verificado</option>
+          <option value="no">No tiene TheFork</option>
+          <option value="si">Sí tiene TheFork</option>
+        </select>
+      </div>
+      <button class="btn-sec" onclick="addManual()" style="margin-top:0.55rem;">+ Añadir</button>
+    </div>
+
+    <div style="margin-top:auto;">
+      <button class="btn-sec" onclick="clearAll()">🗑 Limpiar todo</button>
+    </div>
+  </aside>
+
+  <div class="content">
+    <div class="topbar">
+      <button class="chip on" onclick="setFiltro('todos',this)">Todos</button>
+      <button class="chip" onclick="setFiltro('alta',this)">⬤ Alta prioridad</button>
+      <button class="chip" onclick="setFiltro('sin-tf',this)">✦ Sin TheFork</button>
+      <button class="chip" onclick="setFiltro('con-tf',this)">⟲ Con TheFork</button>
+      <button class="chip" onclick="setFiltro('web',this)">🌐 Con web</button>
+      <button class="chip" onclick="setFiltro('ig',this)">📸 Con Instagram</button>
+      <div class="rcount">Mostrando <b id="showing">0</b> leads</div>
+      <button class="btn-csv" onclick="exportCSV()">↓ CSV</button>
+    </div>
+
+    <div class="table-wrap">
+      <table id="tabla">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Restaurante</th>
+            <th>Zona</th>
+            <th>Web</th>
+            <th>TheFork</th>
+            <th>Argumento</th>
+            <th>Canales</th>
+            <th>Prioridad</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <div class="empty" id="empty">
+        <div class="empty-icon">◈</div>
+        <div class="empty-t">Sin leads todavía</div>
+        <div class="empty-s">Pulsa "Buscar ahora" para extraer restaurantes automáticamente desde Google Places.</div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- MODAL -->
+<div class="modal-bg" id="modal-bg">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-t" id="modal-nombre"></div>
+      <div class="modal-meta" id="modal-meta"></div>
+      <div id="modal-arg-badge" style="margin-top:4px;"></div>
+    </div>
+
+    <div class="modal-tabs">
+      <button class="mtab on" onclick="switchTab('seguimiento',this)">Seguimiento</button>
+      <button class="mtab" onclick="switchTab('whatsapp',this)">WhatsApp</button>
+      <button class="mtab" onclick="switchTab('email',this)">Email</button>
+      <button class="mtab" onclick="switchTab('dm',this)">Instagram DM</button>
+    </div>
+
+    <!-- SEGUIMIENTO -->
+    <div class="tab-panel on" id="tab-seguimiento">
+      <div class="igroup">
+        <div class="ilabel">¿Está en TheFork?</div>
+        <div class="tf-toggle">
+          <button class="tf-opt" id="tf-nd" onclick="setTF('nd')">No verificado</button>
+          <button class="tf-opt" id="tf-no" onclick="setTF('no')">✗ No tiene</button>
+          <button class="tf-opt" id="tf-si" onclick="setTF('si')">✓ Sí tiene</button>
+        </div>
+      </div>
+      <div class="igroup">
+        <div class="ilabel">Instagram encontrado</div>
+        <input type="text" id="modal-ig" placeholder="@restaurante o URL">
+      </div>
+      <div class="igroup">
+        <div class="ilabel">Email</div>
+        <input type="email" id="modal-email" placeholder="info@restaurante.com">
+      </div>
+      <div class="igroup">
+        <div class="ilabel">Estado</div>
+        <select id="modal-estado">
+          <option value="">Sin estado</option>
+          <option value="por-contactar">Por contactar</option>
+          <option value="contactado">Contactado ✉</option>
+          <option value="interesado">Interesado 🔥</option>
+          <option value="reunion">Reunión agendada 📅</option>
+          <option value="cerrado">Cerrado ✓</option>
+          <option value="descartado">Descartado</option>
+        </select>
+      </div>
+      <div class="igroup">
+        <div class="ilabel">Notas</div>
+        <textarea id="modal-notas" placeholder="Notas de seguimiento..."></textarea>
+      </div>
+      <div class="modal-row">
+        <button class="btn-sec" style="width:auto;padding:0.45rem 0.9rem;" onclick="cerrarModal()">Cancelar</button>
+        <button class="btn-main" style="width:auto;padding:0.45rem 1.3rem;" onclick="guardarModal()">Guardar</button>
+      </div>
+    </div>
+
+    <!-- WHATSAPP -->
+    <div class="tab-panel" id="tab-whatsapp">
+      <div id="wa-arg-info" style="font-size:0.58rem;padding:0.5rem 0.7rem;border-radius:4px;line-height:1.6;"></div>
+      <div>
+        <div class="ilabel" style="margin-bottom:0.4rem;">Tono</div>
+        <div class="tono-grid">
+          <button class="tono-btn on" data-tono="directo" onclick="setTono(this,'wa')">Directo</button>
+          <button class="tono-btn" data-tono="curioso" onclick="setTono(this,'wa')">Curioso</button>
+          <button class="tono-btn" data-tono="urgente" onclick="setTono(this,'wa')">Urgente</button>
+          <button class="tono-btn" data-tono="amable" onclick="setTono(this,'wa')">Amable</button>
+        </div>
+      </div>
+      <div>
+        <div class="ilabel" style="margin-bottom:0.35rem;">Contexto adicional (opcional)</div>
+        <textarea class="ctx-input" id="ctx-wa" placeholder="Ej: Vi que tienen buena presencia en Instagram..."></textarea>
+      </div>
+      <button class="btn-main" onclick="generar('wa')" id="btn-gen-wa">✦ Generar mensaje WhatsApp</button>
+      <div class="msg-output" id="out-wa"><span class="msg-placeholder">El mensaje aparecerá aquí...</span></div>
+    </div>
+
+    <!-- EMAIL -->
+    <div class="tab-panel" id="tab-email">
+      <div id="em-arg-info" style="font-size:0.58rem;padding:0.5rem 0.7rem;border-radius:4px;line-height:1.6;"></div>
+      <div>
+        <div class="ilabel" style="margin-bottom:0.4rem;">Tono</div>
+        <div class="tono-grid">
+          <button class="tono-btn on" data-tono="directo" onclick="setTono(this,'em')">Directo</button>
+          <button class="tono-btn" data-tono="curioso" onclick="setTono(this,'em')">Curioso</button>
+          <button class="tono-btn" data-tono="formal" onclick="setTono(this,'em')">Formal</button>
+          <button class="tono-btn" data-tono="amable" onclick="setTono(this,'em')">Amable</button>
+        </div>
+      </div>
+      <div>
+        <div class="ilabel" style="margin-bottom:0.35rem;">Contexto adicional (opcional)</div>
+        <textarea class="ctx-input" id="ctx-em" placeholder="Ej: Tienen más de 300 reseñas en Google..."></textarea>
+      </div>
+      <button class="btn-main" onclick="generar('em')" id="btn-gen-em">✦ Generar email</button>
+      <div class="msg-output" id="out-em"><span class="msg-placeholder">El email aparecerá aquí...</span></div>
+    </div>
+
+    <!-- DM INSTAGRAM -->
+    <div class="tab-panel" id="tab-dm">
+      <div id="ig-found-info" style="font-size:0.6rem;color:var(--texto);padding:0.4rem 0;"></div>
+      <button class="btn-sec" id="btn-find-ig" onclick="buscarInstagram()" style="margin-bottom:0.2rem;">🔍 Buscar Instagram automáticamente</button>
+      <div id="dm-arg-info" style="font-size:0.58rem;padding:0.5rem 0.7rem;border-radius:4px;line-height:1.6;"></div>
+      <div>
+        <div class="ilabel" style="margin-bottom:0.4rem;">Tono</div>
+        <div class="tono-grid">
+          <button class="tono-btn on" data-tono="directo" onclick="setTono(this,'dm')">Directo</button>
+          <button class="tono-btn" data-tono="curioso" onclick="setTono(this,'dm')">Curioso</button>
+          <button class="tono-btn" data-tono="casual" onclick="setTono(this,'dm')">Casual</button>
+          <button class="tono-btn" data-tono="amable" onclick="setTono(this,'dm')">Amable</button>
+        </div>
+      </div>
+      <div>
+        <div class="ilabel" style="margin-bottom:0.35rem;">Contexto adicional (opcional)</div>
+        <textarea class="ctx-input" id="ctx-dm" placeholder="Ej: Vi sus stories, tienen buena presencia..."></textarea>
+      </div>
+      <button class="btn-main" onclick="generar('dm')" id="btn-gen-dm">✦ Generar DM Instagram</button>
+      <div class="msg-output" id="out-dm"><span class="msg-placeholder">El DM aparecerá aquí...</span></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+let leads = [];
+let filtro = 'todos';
+let editId = null;
+let currentLead = null;
+let tonos = { wa: 'directo', em: 'directo', dm: 'directo' };
+let tabActiva = 'seguimiento';
+let tfModalActual = 'nd';
+
+try { leads = JSON.parse(localStorage.getItem('pv-leads3') || '[]'); } catch(e) {}
+
+// ─── PRIORIDAD ────────────────────────────────────────────────────────────────
+function calcPrioridad(l) {
+  const web = l.web && l.web.startsWith('http');
+  const tel = l.telefono && l.telefono.length > 4;
+  const ig = l.instagram && l.instagram.length > 2;
+  // Ambos casos son alta prioridad, pero por razones distintas
+  if (web || tel || ig) return 'alta';
+  return 'baja';
+}
+
+function getArgumento(l) {
+  if (l.thefork === 'si') return 'comision'; // Están en TheFork — argumento: reducir comisiones
+  if (l.thefork === 'no') return 'perdida';  // No están — argumento: se pierden reservas
+  return null;
+}
+
+// ─── BUSCAR API ───────────────────────────────────────────────────────────────
+async function buscar() {
+  const key = document.getElementById('api-key').value.trim();
+  const zona = document.getElementById('zona').value.trim();
+  const tipo = document.getElementById('tipo').value;
+  const radio = document.getElementById('radio').value;
+  if (!key || !zona) { alert('Completa API key y zona'); return; }
+
+  const btn = document.getElementById('btn-buscar');
+  btn.disabled = true; btn.textContent = 'Buscando...';
+  const pw = document.getElementById('prog-wrap');
+  const pf = document.getElementById('prog-fill');
+  const pm = document.getElementById('prog-msg');
+  pw.style.display = 'block';
+  setP(pf, pm, 8, 'Geocodificando zona...');
+
+  try {
+    const geoR = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(zona)}&key=${key}`);
+    const geoD = await geoR.json();
+    if (geoD.status !== 'OK') throw new Error(`Zona no encontrada (${geoD.status})`);
+    const loc = geoD.results[0].geometry.location;
+    setP(pf, pm, 22, `✓ ${geoD.results[0].formatted_address}`);
+
+    const pR = await fetch(`https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${loc.lat},${loc.lng}&radius=${radio}&type=${tipo}&language=es&key=${key}`);
+    const pD = await pR.json();
+    if (pD.status !== 'OK' && pD.status !== 'ZERO_RESULTS') throw new Error(`Places API: ${pD.status} — ${pD.error_message || ''}`);
+
+    const places = pD.results || [];
+    if (!places.length) { setP(pf, pm, 100, '⚠ Sin resultados'); return; }
+    setP(pf, pm, 35, `✓ ${places.length} lugares. Extrayendo detalles...`);
+
+    let done = 0;
+    const total = Math.min(places.length, 20);
+    for (const p of places.slice(0, 20)) {
+      const dR = await fetch(`https://maps.googleapis.com/maps/api/place/details/json?place_id=${p.place_id}&fields=name,website,formatted_phone_number,url&language=es&key=${key}`);
+      const dD = await dR.json();
+      const d = dD.result || {};
+      const lead = {
+        id: Date.now() + Math.random(),
+        nombre: d.name || p.name,
+        zona: zona.split(',')[0].trim(),
+        web: d.website || '',
+        email: '',
+        telefono: d.formatted_phone_number || '',
+        instagram: '',
+        thefork: 'nd', // nd = no verificado
+        maps_url: d.url || '',
+        notas: '', estado: '',
+        ts: new Date().toLocaleDateString('es-ES')
+      };
+      lead.prioridad = calcPrioridad(lead);
+      if (!leads.find(l => l.nombre.toLowerCase() === lead.nombre.toLowerCase())) leads.unshift(lead);
+      done++;
+      setP(pf, pm, 35 + Math.round((done/total)*60), `${done}/${total} — ${d.name || p.name}`);
+      await new Promise(r => setTimeout(r, 100));
+    }
+
+    save(); render();
+    setP(pf, pm, 100, `✓ ${done} leads añadidos`);
+  } catch(err) {
+    pm.textContent = `✗ ${err.message}`;
+    pm.style.color = 'var(--rojo)';
+  }
+
+  btn.disabled = false; btn.textContent = '⚡ Buscar ahora';
+  setTimeout(() => { pw.style.display = 'none'; pf.style.width = '0%'; pm.style.color = ''; }, 5000);
+}
+
+function setP(fill, msg, pct, text) { fill.style.width = pct + '%'; msg.textContent = text; }
+
+// ─── BUSCAR INSTAGRAM ─────────────────────────────────────────────────────────
+async function buscarInstagram() {
+  if (!currentLead) return;
+  const btn = document.getElementById('btn-find-ig');
+  const info = document.getElementById('ig-found-info');
+  btn.textContent = '🔍 Buscando...';
+  btn.disabled = true;
+  info.textContent = 'Buscando cuenta de Instagram...';
+  info.style.color = 'var(--texto)';
+
+  try {
+    // Usamos la API de Claude para hacer la búsqueda inteligente
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 200,
+        tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+        messages: [{
+          role: 'user',
+          content: `Busca en Google el perfil de Instagram del restaurante "${currentLead.nombre}" ubicado en ${currentLead.zona}, España.${currentLead.web ? ` Su web es ${currentLead.web}.` : ''}
+
+Devuelve SOLO el handle de Instagram (ej: @nombrerestaurante) o la URL completa de Instagram. Si no encuentras nada con seguridad, responde exactamente: NO_ENCONTRADO`
+        }]
+      })
+    });
+
+    const data = await res.json();
+    const texto = data.content?.filter(b => b.type === 'text').map(b => b.text).join('') || '';
+
+    // Extraer handle/URL de Instagram
+    const igMatch = texto.match(/@[\w.]+|instagram\.com\/[\w.]+/i);
+    const igRaw = igMatch ? igMatch[0] : null;
+
+    if (igRaw && !texto.includes('NO_ENCONTRADO')) {
+      const igHandle = igRaw.startsWith('@') ? igRaw : '@' + igRaw.replace(/.*instagram\.com\//i, '').replace(/\//g, '');
+      currentLead.instagram = igHandle;
+      document.getElementById('modal-ig').value = igHandle;
+      info.textContent = `✓ Encontrado: ${igHandle}`;
+      info.style.color = 'var(--verde)';
+      // Guardar automáticamente
+      const l = leads.find(x => x.id === currentLead.id);
+      if (l) { l.instagram = igHandle; save(); render(); }
+    } else {
+      info.textContent = '⚠ No encontrado automáticamente — añádelo manualmente arriba';
+      info.style.color = 'var(--amarillo)';
+    }
+  } catch(err) {
+    info.textContent = `✗ Error: ${err.message}`;
+    info.style.color = 'var(--rojo)';
+  }
+
+  btn.textContent = '🔍 Buscar Instagram';
+  btn.disabled = false;
+}
+
+// ─── MANUAL ───────────────────────────────────────────────────────────────────
+function addManual() {
+  const nombre = document.getElementById('m-nombre').value.trim();
+  if (!nombre) { alert('Escribe el nombre'); return; }
+  const lead = {
+    id: Date.now(), nombre,
+    zona: document.getElementById('m-zona').value.trim() || 'Tenerife',
+    web: document.getElementById('m-web').value.trim(),
+    email: document.getElementById('m-email').value.trim(),
+    telefono: document.getElementById('m-tel').value.trim(),
+    instagram: '',
+    thefork: document.getElementById('m-tf').value,
+    maps_url: '', notas: '', estado: '',
+    ts: new Date().toLocaleDateString('es-ES')
+  };
+  lead.prioridad = calcPrioridad(lead);
+  leads.unshift(lead);
+  save(); render();
+  ['m-nombre','m-web','m-email','m-tel','m-zona'].forEach(id => document.getElementById(id).value = '');
+}
+
+// ─── FILTROS ──────────────────────────────────────────────────────────────────
+function setFiltro(f, el) {
+  filtro = f;
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('on'));
+  el.classList.add('on');
+  render();
+}
+
+function getFiltrados() {
+  switch(filtro) {
+    case 'alta': return leads.filter(l => l.prioridad === 'alta');
+    case 'sin-tf': return leads.filter(l => l.thefork === 'no');
+    case 'con-tf': return leads.filter(l => l.thefork === 'si');
+    case 'web': return leads.filter(l => l.web && l.web.startsWith('http'));
+    case 'ig': return leads.filter(l => l.instagram && l.instagram.length > 2);
+    default: return leads;
+  }
+}
+
+// ─── RENDER ───────────────────────────────────────────────────────────────────
+function render() {
+  const f = getFiltrados();
+  document.getElementById('st-total').textContent = leads.length;
+  document.getElementById('st-alta').textContent = leads.filter(l => l.prioridad === 'alta').length;
+  document.getElementById('st-tf').textContent = leads.filter(l => l.thefork === 'no').length;
+  document.getElementById('showing').textContent = f.length;
+
+  const empty = document.getElementById('empty');
+  const tabla = document.getElementById('tabla');
+  empty.style.display = f.length === 0 ? 'flex' : 'none';
+  tabla.style.display = f.length === 0 ? 'none' : '';
+
+  document.getElementById('tbody').innerHTML = f.map((l, i) => {
+    const webCell = l.web && l.web.startsWith('http')
+      ? `<a href="${l.web}" target="_blank">${l.web.replace(/https?:\/\/(www\.)?/,'').substring(0,20)}${l.web.length>26?'…':''}</a>`
+      : `<span style="color:#222;font-size:0.56rem;">—</span>`;
+
+    const tfBadge = l.thefork === 'si'
+      ? `<span class="tf-si">✓ Sí</span>`
+      : l.thefork === 'no'
+      ? `<span class="tf-no">✗ No</span>`
+      : `<span class="tf-nd">—</span>`;
+
+    const arg = getArgumento(l);
+    const argEl = arg === 'comision'
+      ? `<span class="arg-comision">Reducir comisión</span>`
+      : arg === 'perdida'
+      ? `<span class="arg-perdida">Reservas perdidas</span>`
+      : `<span style="color:#222;font-size:0.5rem;">Verificar TheFork</span>`;
+
+    // Quick links
+    const nombre_enc = encodeURIComponent(l.nombre + ' ' + l.zona);
+    const igLink = l.instagram
+      ? `<a class="ql ig-found" href="https://instagram.com/${l.instagram.replace('@','')}" target="_blank" title="Instagram: ${l.instagram}">📸</a>`
+      : `<button class="ql" onclick="abrirModal(${JSON.stringify(l.id)},'dm')" title="Buscar Instagram">📸</button>`;
+
+    const quickLinks = `<div class="quick-links">
+      ${igLink}
+      <a class="ql" href="https://www.thefork.es/buscar?query=${nombre_enc}" target="_blank" title="Buscar en TheFork">🍴</a>
+      <a class="ql" href="https://www.tripadvisor.es/Search?q=${nombre_enc}" target="_blank" title="Buscar en TripAdvisor">⭐</a>
+      ${l.maps_url ? `<a class="ql" href="${l.maps_url}" target="_blank" title="Ver en Google Maps">📍</a>` : ''}
+    </div>`;
+
+    const prioBadge = l.prioridad === 'alta'
+      ? `<div class="prio alta"><span class="dot dg"></span>Alta</div>`
+      : `<div class="prio baja"><span class="dot dr"></span>Baja</div>`;
+
+    const estadoEl = l.estado ? `<div class="status-badge">${l.estado}</div>` : '';
+    const lid = JSON.stringify(l.id);
+
+    return `<tr>
+      <td style="color:#222;font-size:0.56rem;">${String(i+1).padStart(2,'0')}</td>
+      <td class="td-n">${l.nombre}</td>
+      <td style="color:var(--texto);font-size:0.58rem;">${l.zona}</td>
+      <td class="td-web">${webCell}</td>
+      <td>${tfBadge}</td>
+      <td>${argEl}</td>
+      <td>${quickLinks}</td>
+      <td>${prioBadge}</td>
+      <td>${estadoEl}</td>
+      <td><div style="display:flex;gap:3px;">
+        <button class="btn-act ai-btn" onclick="abrirModal(${lid},'whatsapp')" title="WhatsApp">💬</button>
+        <button class="btn-act ai-btn" onclick="abrirModal(${lid},'email')" title="Email">✉</button>
+        <button class="btn-act ai-btn" onclick="abrirModal(${lid},'dm')" title="Instagram DM">📸</button>
+        <button class="btn-act" onclick="abrirModal(${lid},'seguimiento')">✎</button>
+        <button class="btn-act btn-del" onclick="borrar(${lid})">✕</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+// ─── MODAL ────────────────────────────────────────────────────────────────────
+function abrirModal(id, tab = 'seguimiento') {
+  editId = id;
+  currentLead = leads.find(x => x.id === id);
+  if (!currentLead) return;
+
+  document.getElementById('modal-nombre').textContent = currentLead.nombre;
+  const metaParts = [currentLead.zona, currentLead.web ? '🌐 Web' : null, currentLead.telefono || null].filter(Boolean);
+  document.getElementById('modal-meta').textContent = metaParts.join(' · ');
+
+  // Argumento badge
+  const arg = getArgumento(currentLead);
+  const argBadge = document.getElementById('modal-arg-badge');
+  if (arg === 'comision') {
+    argBadge.innerHTML = `<span class="modal-arg comision">⟲ Argumento: están en TheFork — hablar de reducir comisiones</span>`;
+  } else if (arg === 'perdida') {
+    argBadge.innerHTML = `<span class="modal-arg perdida">✦ Argumento: no están en TheFork — se pierden reservas</span>`;
+  } else {
+    argBadge.innerHTML = `<span style="font-size:0.52rem;color:#444;">Verifica TheFork en la pestaña Seguimiento para afinar el argumento</span>`;
+  }
+
+  // Rellenar seguimiento
+  document.getElementById('modal-notas').value = currentLead.notas || '';
+  document.getElementById('modal-estado').value = currentLead.estado || '';
+  document.getElementById('modal-email').value = currentLead.email || '';
+  document.getElementById('modal-ig').value = currentLead.instagram || '';
+  setTFModal(currentLead.thefork || 'nd');
+
+  // Info argumento en tabs de mensajes
+  actualizarArgInfos();
+
+  // Instagram info
+  const igInfo = document.getElementById('ig-found-info');
+  if (currentLead.instagram) {
+    igInfo.textContent = `✓ Instagram guardado: ${currentLead.instagram}`;
+    igInfo.style.color = 'var(--verde)';
+  } else {
+    igInfo.textContent = 'Sin Instagram guardado. Búscalo automáticamente o añádelo manualmente.';
+    igInfo.style.color = 'var(--texto)';
+  }
+
+  // Limpiar outputs
+  ['wa','em','dm'].forEach(c => {
+    document.getElementById(`out-${c}`).innerHTML = '<span class="msg-placeholder">El mensaje generado aparecerá aquí...</span>';
+  });
+
+  const tabMap = { seguimiento: 'seguimiento', whatsapp: 'whatsapp', email: 'email', dm: 'dm' };
+  const tabEl = document.querySelectorAll('.mtab');
+  const tabIdx = ['seguimiento','whatsapp','email','dm'].indexOf(tab);
+  switchTab(tab, tabEl[tabIdx >= 0 ? tabIdx : 0]);
+
+  document.getElementById('modal-bg').classList.add('show');
+}
+
+function actualizarArgInfos() {
+  const arg = getArgumento(currentLead);
+  const configs = {
+    'wa': { el: 'wa-arg-info' },
+    'em': { el: 'em-arg-info' },
+    'dm': { el: 'dm-arg-info' }
+  };
+  Object.values(configs).forEach(({ el }) => {
+    const div = document.getElementById(el);
+    if (arg === 'comision') {
+      div.style.cssText = 'background:rgba(96,165,250,0.06);border:1px solid rgba(96,165,250,0.15);border-radius:4px;';
+      div.innerHTML = `<span style="color:var(--azul);font-size:0.54rem;letter-spacing:0.06em;text-transform:uppercase;">⟲ Argumento activo:</span> <span style="color:#aaa;font-size:0.58rem;">Están en TheFork y pagan comisión por reserva. ValerIA trae las reservas por WhatsApp sin comisión.</span>`;
+    } else if (arg === 'perdida') {
+      div.style.cssText = 'background:rgba(74,222,128,0.06);border:1px solid rgba(74,222,128,0.15);border-radius:4px;';
+      div.innerHTML = `<span style="color:var(--verde);font-size:0.54rem;letter-spacing:0.06em;text-transform:uppercase;">✦ Argumento activo:</span> <span style="color:#aaa;font-size:0.58rem;">No tienen sistema de reservas. Se les escapan reservas cuando no contestan el teléfono.</span>`;
+    } else {
+      div.style.cssText = 'background:rgba(255,255,255,0.02);border:1px solid #252525;border-radius:4px;';
+      div.innerHTML = `<span style="color:#444;font-size:0.56rem;">Verifica si tienen TheFork en la pestaña Seguimiento para personalizar el argumento del mensaje.</span>`;
+    }
+  });
+}
+
+function setTFModal(val) {
+  tfModalActual = val;
+  ['nd','no','si'].forEach(v => {
+    const btn = document.getElementById(`tf-${v}`);
+    btn.className = 'tf-opt' + (v === val ? (v === 'si' ? ' on-si' : v === 'no' ? ' on-no' : ' on-nd') : '');
+  });
+}
+
+function setTF(val) {
+  setTFModal(val);
+  if (currentLead) {
+    currentLead.thefork = val;
+    const badge = document.getElementById('modal-arg-badge');
+    const arg = getArgumento(currentLead);
+    if (arg === 'comision') {
+      badge.innerHTML = `<span class="modal-arg comision">⟲ Argumento: están en TheFork — hablar de reducir comisiones</span>`;
+    } else if (arg === 'perdida') {
+      badge.innerHTML = `<span class="modal-arg perdida">✦ Argumento: no están en TheFork — se pierden reservas</span>`;
+    } else {
+      badge.innerHTML = '';
+    }
+    actualizarArgInfos();
+  }
+}
+
+function switchTab(tab, el) {
+  tabActiva = tab;
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('on'));
+  document.querySelectorAll('.mtab').forEach(b => b.classList.remove('on'));
+  const panelId = { seguimiento: 'tab-seguimiento', whatsapp: 'tab-whatsapp', email: 'tab-email', dm: 'tab-dm' }[tab];
+  if (panelId) document.getElementById(panelId).classList.add('on');
+  if (el) el.classList.add('on');
+}
+
+function cerrarModal() { document.getElementById('modal-bg').classList.remove('show'); editId = null; currentLead = null; }
+
+function guardarModal() {
+  const l = leads.find(x => x.id === editId);
+  if (!l) return;
+  l.notas = document.getElementById('modal-notas').value;
+  l.estado = document.getElementById('modal-estado').value;
+  l.email = document.getElementById('modal-email').value || l.email;
+  l.instagram = document.getElementById('modal-ig').value || l.instagram;
+  l.thefork = tfModalActual;
+  l.prioridad = calcPrioridad(l);
+  save(); render(); cerrarModal();
+}
+
+function setTono(el, canal) {
+  const parent = el.closest('.tab-panel');
+  if (parent) parent.querySelectorAll('.tono-btn').forEach(b => b.classList.remove('on'));
+  el.classList.add('on');
+  tonos[canal] = el.dataset.tono;
+}
+
+// ─── GENERADOR IA ─────────────────────────────────────────────────────────────
+async function generar(canal) {
+  if (!currentLead) return;
+
+  const outEl = document.getElementById(`out-${canal}`);
+  const ctxEl = document.getElementById(`ctx-${canal}`);
+  const tono = tonos[canal] || 'directo';
+  const ctx = ctxEl ? ctxEl.value.trim() : '';
+  const btnId = { wa: 'btn-gen-wa', em: 'btn-gen-em', dm: 'btn-gen-dm' }[canal];
+  const btn = document.getElementById(btnId);
+  btn.disabled = true; btn.textContent = 'Generando...';
+  outEl.innerHTML = `<span style="color:var(--champagne-dark);animation:gen-pulse 1s infinite;">Escribiendo mensaje personalizado...</span>`;
+
+  const tieneWeb = currentLead.web && currentLead.web.startsWith('http');
+  const tieneTF = currentLead.thefork === 'si';
+  const noTF = currentLead.thefork === 'no';
+  const ig = currentLead.instagram || '';
+
+  // Argumento central según TheFork
+  const argumentoCentral = tieneTF
+    ? `El restaurante YA está en TheFork y paga comisión por cada reserva (normalmente 2-4€/comensal). Tu argumento es: ValerIA les trae las mismas reservas por WhatsApp sin pagar comisión. No les vendes algo nuevo — les ahorras dinero que ya están gastando.`
+    : noTF
+    ? `El restaurante NO tiene sistema de reservas online. Tu argumento es: se les escapan reservas cada vez que no contestan el teléfono, especialmente de noche, fines de semana y de turistas extranjeros. ValerIA responde 24/7 en cualquier idioma.`
+    : `No se sabe si tienen TheFork. Usa un argumento mixto: habla de reservas perdidas por teléfono no atendido y de la posibilidad de automatizar sin comisiones.`;
+
+  const prompts = {
+    wa: `Eres Annareth, fundadora de Out of Office, agencia de IA para hostelería en Tenerife. Experiencia real: trabajaste en un steakhouse de 300 cubiertos/día. Tu producto ValerIA: agente de reservas 24/7 por WhatsApp, multilingüe, IA (Claude Sonnet), sin comisión por reserva. Precio: €1.500 setup + €400/mes.
+
+RESTAURANTE OBJETIVO: "${currentLead.nombre}" en ${currentLead.zona}.
+${tieneWeb ? `Web: ${currentLead.web}` : 'Sin web detectada.'}
+${ctx ? `Contexto adicional: ${ctx}` : ''}
+
+ARGUMENTO A USAR: ${argumentoCentral}
+
+Escribe un mensaje de WhatsApp. Tono: ${tono}.
+
+REGLAS ESTRICTAS:
+- Máximo 4-5 líneas. Tiene que caber en un WhatsApp real.
+- No suenes a robot. Sonás a alguien del sector.
+- No menciones el precio.
+- Termina con una pregunta o CTA muy concreto.
+- Español, tutéalo.
+- Solo el mensaje, sin etiquetas ni explicaciones.`,
+
+    em: `Eres Annareth, fundadora de Out of Office, agencia de IA para hostelería en Tenerife. Tu producto ValerIA: agente de reservas 24/7 por WhatsApp, multilingüe, sin comisión. Precio: €1.500 setup + €400/mes.
+
+RESTAURANTE OBJETIVO: "${currentLead.nombre}" en ${currentLead.zona}.
+${tieneWeb ? `Web: ${currentLead.web}` : 'Sin web detectada.'}
+${ctx ? `Contexto adicional: ${ctx}` : ''}
+
+ARGUMENTO A USAR: ${argumentoCentral}
+
+Escribe un email de prospección. Tono: ${tono}.
+
+FORMATO OBLIGATORIO:
+Asunto: [máx 8 palabras, genera curiosidad]
+
+[cuerpo: 3-4 párrafos cortos. Gancho → quién eres → solución → CTA de llamada de 10 min]
+
+REGLAS:
+- Sonido humano, no comercial.
+- Solo pides una llamada de 10 minutos.
+- Español.
+- Solo el email, sin explicaciones extras.`,
+
+    dm: `Eres Annareth, fundadora de Out of Office, agencia de IA para hostelería en Tenerife. Tu producto ValerIA automatiza reservas 24/7 por WhatsApp.
+
+RESTAURANTE OBJETIVO: "${currentLead.nombre}" en ${currentLead.zona}.
+${ig ? `Su Instagram: ${ig}` : 'Instagram no verificado.'}
+${ctx ? `Contexto adicional: ${ctx}` : ''}
+
+ARGUMENTO A USAR: ${argumentoCentral}
+
+Escribe un DM de Instagram. Tono: ${tono}.
+
+REGLAS ESTRICTAS:
+- MÁXIMO 2-3 líneas. Los DMs cortos abren más.
+- No empieces con "Hola [nombre]". Entra directo al punto.
+- Genera curiosidad o haz una pregunta que les haga pensar.
+- Español, informal pero profesional.
+- Solo el DM, nada más.`
+  };
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompts[canal] }]
+      })
+    });
+
+    const data = await res.json();
+    const texto = data.content?.[0]?.text || 'Error al generar.';
+
+    outEl.innerHTML = '';
+    outEl.textContent = texto;
+
+    const copyBtn = document.createElement('button');
+    copyBtn.className = 'copy-btn';
+    copyBtn.textContent = 'Copiar';
+    copyBtn.onclick = () => {
+      navigator.clipboard.writeText(texto);
+      copyBtn.textContent = '✓ Copiado';
+      copyBtn.classList.add('copied');
+      setTimeout(() => { copyBtn.textContent = 'Copiar'; copyBtn.classList.remove('copied'); }, 2000);
+    };
+    outEl.style.position = 'relative';
+    outEl.appendChild(copyBtn);
+
+  } catch(err) {
+    outEl.innerHTML = `<span style="color:var(--rojo);">Error: ${err.message}</span>`;
+  }
+
+  btn.disabled = false;
+  btn.textContent = { wa: '✦ Generar mensaje WhatsApp', em: '✦ Generar email', dm: '✦ Generar DM Instagram' }[canal];
+}
+
+// ─── UTILS ────────────────────────────────────────────────────────────────────
+function borrar(id) { leads = leads.filter(l => l.id !== id); save(); render(); }
+function clearAll() { if (!confirm('¿Borrar todos los leads?')) return; leads = []; save(); render(); }
+function save() { try { localStorage.setItem('pv-leads3', JSON.stringify(leads)); } catch(e) {} }
+
+function exportCSV() {
+  const f = getFiltrados();
+  if (!f.length) { alert('No hay leads'); return; }
+  const header = ['Nombre','Zona','Web','Email','Telefono','Instagram','TheFork','Prioridad','Estado','Notas','Fecha'];
+  const rows = f.map(l => [l.nombre,l.zona,l.web||'',l.email||'',l.telefono||'',l.instagram||'',l.thefork||'',l.prioridad,l.estado||'',l.notas||'',l.ts]);
+  const csv = [header,...rows].map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));
+  a.download = `prospeccion_valeria_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+
+document.addEventListener('keydown', e => { if(e.key==='Escape') cerrarModal(); });
+render();
+</script>
+</body>
+</html>
