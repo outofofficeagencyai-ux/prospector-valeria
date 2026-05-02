@@ -597,12 +597,12 @@ let tfModalActual = 'nd';
 try { leads = JSON.parse(localStorage.getItem('pv-leads3') || '[]'); } catch(e) {}
 
 //
-const CADENAS = ["subway","mcdonald","burger king","kfc","pizza hut","domino","telepizza","fosters","vips","starbucks","dunkin","five guys","popeyes","taco bell","hard rock cafe","hooters","sushi daily","pans","la tagliatella","grosso napoletano","hotel","hostel","resort","aparthotel","centro comercial","harbour club","beach club","pool bar","snack bar","cafeteria","panaderia","pasteleria","heladeria","kebab","chino","sushi"];
+const CADENAS = ["subway","mcdonald","burger king","kfc","pizza hut","domino","telepizza","fosters","vips","starbucks","dunkin","five guys","popeyes","taco bell","hard rock cafe","hooters","sushi daily","pans","la tagliatella","grosso napoletano","hotel","hostel","resort","aparthotel","centro comercial","harbour club","beach club","pool bar","snack bar","cafeteria","cafetería","panaderia","pasteleria","heladeria","kebab","chino","sushi","hamburgues","fast food","bocadillo","sandwich","cafe","café","bar ","pizzeria","pizzería","kebab","fish and chips","take away","takeaway","autoservicio","buffet libre"];
 function esCadena(nombre) { return CADENAS.some(c => nombre.toLowerCase().includes(c)); }
 
 //
 function calcPrioridad(l) {
-  const buenasResenas = l.resenas >= 100;
+  const buenasResenas = l.resenas >= 150;
   const buenaPuntuacion = l.rating >= 4.0;
   const sinReservaOnline = l.reserva_online === 'no';
   const precioOk = l.price_level === -1 || l.price_level >= 2; // -1 = sin datos, lo incluimos
@@ -616,7 +616,7 @@ function calcPrioridad(l) {
 
 function cumpleCriterios(l) {
   const precioOk = l.price_level === -1 || l.price_level >= 2;
-  return l.resenas >= 100 && l.rating >= 4.0 && precioOk;
+  return l.resenas >= 150 && l.rating >= 4.0 && precioOk;
 }
 
 function getArgumento(l) {
@@ -871,7 +871,7 @@ function render() {
     const ratingCell = l.rating > 0
       ? `<span style="color:${ratingColor};font-size:0.68rem;font-weight:500;">${l.rating.toFixed(1)}</span>`
       : `<span style="color:#222;font-size:0.56rem;">—</span>`;
-    const resenasColor = l.resenas >= 100 ? 'var(--verde)' : 'var(--amarillo)';
+    const resenasColor = l.resenas >= 150 ? 'var(--verde)' : 'var(--amarillo)';
     const resenasCell = l.resenas > 0
       ? `<span style="color:${resenasColor};font-size:0.65rem;">${l.resenas}</span>`
       : `<span style="color:#222;font-size:0.56rem;">—</span>`;
