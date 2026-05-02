@@ -577,7 +577,7 @@ async function buscar() {
   setP(pf, pm, 8, 'Geocodificando zona...');
 
   try {
-    const PROXY = 'https://corsproxy.io/?url=';
+    const PROXY = 'https://api.allorigins.win/raw?url=';
     const geoR = await fetch(`${PROXY}${encodeURIComponent(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(zona)}&key=${key}`)}`);
     const geoD = await geoR.json();
     if (geoD.status !== 'OK') throw new Error(`Zona no encontrada (${geoD.status})`);
