@@ -593,6 +593,19 @@ let tfModalActual = 'nd';
 
 try { leads = JSON.parse(localStorage.getItem('pv-leads3') || '[]'); } catch(e) {}
 
+// ─── CADENAS A EXCLUIR ───────────────────────────────────────────────────────
+const CADENAS = [
+  'subway', 'mcdonald', 'burger king', 'kfc', 'pizza hut', 'domino',
+  'telepizza', 'foster's hollywood', 'vips', 'starbucks', 'dunkin',
+  'five guys', 'popeyes', 'taco bell', 'hard rock cafe', 'hooters',
+  'sushi daily', 'noodle box', 'pans', 'la tagliatella', 'grosso napoletano'
+];
+
+function esCadena(nombre) {
+  const n = nombre.toLowerCase();
+  return CADENAS.some(c => n.includes(c));
+}
+
 // ─── PRIORIDAD ────────────────────────────────────────────────────────────────
 function calcPrioridad(l) {
   const buenasResenas = l.resenas >= 50;
@@ -701,7 +714,7 @@ async function buscar() {
         ts: new Date().toLocaleDateString('es-ES')
       };
       lead.prioridad = calcPrioridad(lead);
-      if (!leads.find(l => l.nombre.toLowerCase() === lead.nombre.toLowerCase())) leads.unshift(lead);
+      if (!leads.find(l => l.nombre.toLowerCase() === lead.nombre.toLowerCase()) && !esCadena(lead.nombre)) leads.unshift(lead);
       done++;
       setP(pf, pm, 35 + Math.round((done/total)*60), done + '/' + total + ' — ' + (d.name || p.name));
       await new Promise(r => setTimeout(r, 80));
