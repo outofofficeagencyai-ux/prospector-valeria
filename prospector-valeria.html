@@ -300,6 +300,7 @@
     <div class="stat"><div class="stat-n" id="st-total">0</div><div class="stat-l">Leads</div></div>
     <div class="stat"><div class="stat-n" id="st-alta">0</div><div class="stat-l">Alta prioridad</div></div>
     <div class="stat"><div class="stat-n" id="st-tf">0</div><div class="stat-l">Calificados</div></div>
+    <div class="stat"><div class="stat-n" id="st-listos">0</div><div class="stat-l">Listos 🎯</div></div>
   </div>
 </header>
 
@@ -382,6 +383,7 @@
       <button class="chip" onclick="setFiltro('web',this)">🌐 Con web</button>
       <button class="chip" onclick="setFiltro('ig',this)">📸 Con Instagram</button>
       <button class="chip" onclick="setFiltro('calificados',this)">✦ Calificados</button>
+      <button class="chip" onclick="setFiltro('listos',this)">🎯 Listos para contactar</button>
       <div class="rcount">Mostrando <b id="showing">0</b> leads</div>
       <button class="btn-csv" onclick="exportCSV()">↓ CSV</button>
     </div>
@@ -395,6 +397,7 @@
             <th>Zona</th>
             <th>⭐ Punt.</th>
             <th>💬 Reseñas</th>
+            <th>💰 Precio</th>
             <th>Web</th>
             <th>Reserva</th>
             <th>TheFork</th>
@@ -611,16 +614,18 @@ function calcPrioridad(l) {
   const buenasResenas = l.resenas >= 50;
   const buenaPuntuacion = l.rating >= 4.0;
   const sinReservaOnline = l.reserva_online === 'no';
+  const precioOk = l.price_level === -1 || l.price_level >= 2; // -1 = sin datos, lo incluimos
   const tieneContacto = (l.web && l.web.startsWith('http')) || (l.telefono && l.telefono.length > 4) || (l.instagram && l.instagram.length > 2);
   
-  if (buenasResenas && buenaPuntuacion && sinReservaOnline) return 'alta';
-  if (buenasResenas && buenaPuntuacion && tieneContacto) return 'media';
-  if (buenasResenas || buenaPuntuacion) return 'media';
+  if (buenasResenas && buenaPuntuacion && precioOk && sinReservaOnline) return 'alta';
+  if (buenasResenas && buenaPuntuacion && precioOk && tieneContacto) return 'media';
+  if (buenasResenas && buenaPuntuacion && precioOk) return 'media';
   return 'baja';
 }
 
 function cumpleCriterios(l) {
-  return l.resenas >= 50 && l.rating >= 4.0;
+  const precioOk = l.price_level === -1 || l.price_level >= 2;
+  return l.resenas >= 50 && l.rating >= 4.0 && precioOk;
 }
 
 function getArgumento(l) {
@@ -686,7 +691,7 @@ async function buscar() {
       const d = await new Promise((res) => {
         service.getDetails({
           placeId: p.place_id,
-          fields: ['name', 'website', 'formatted_phone_number', 'url', 'rating', 'user_ratings_total', 'reservable', 'serves_beer']
+          fields: ['name', 'website', 'formatted_phone_number', 'url', 'rating', 'user_ratings_total', 'price_level', 'reservable', 'business_status']
         }, (result, status) => {
           res(status === google.maps.places.PlacesServiceStatus.OK ? result : {});
         });
@@ -694,6 +699,8 @@ async function buscar() {
 
       const rating = d.rating || p.rating || 0;
       const reseñas = d.user_ratings_total || p.user_ratings_total || 0;
+      const priceLevel = d.price_level !== undefined ? d.price_level : (p.price_level !== undefined ? p.price_level : -1);
+      const reservable = d.reservable || false;
       const lead = {
         id: Date.now() + Math.random(),
         nombre: d.name || p.name,
@@ -706,7 +713,9 @@ async function buscar() {
         maps_url: d.url || '',
         rating: rating,
         resenas: reseñas,
-        reserva_online: 'nd',
+        price_level: priceLevel,
+        reservable: reservable,
+        reserva_online: reservable ? 'si' : 'nd',
         como_reservan: '',
         ticket_medio: '',
         turismo_intl: 'nd',
@@ -842,7 +851,8 @@ function getFiltrados() {
     case 'con-tf': return leads.filter(l => l.thefork === 'si');
     case 'web': return leads.filter(l => l.web && l.web.startsWith('http'));
     case 'ig': return leads.filter(l => l.instagram && l.instagram.length > 2);
-    case 'calificados': return leads.filter(l => l.resenas >= 50 && l.rating >= 4.0);
+    case 'calificados': return leads.filter(l => cumpleCriterios(l));
+    case 'listos': return leads.filter(l => cumpleCriterios(l) && l.reserva_online === 'no');
     default: return leads;
   }
 }
@@ -852,7 +862,8 @@ function render() {
   const f = getFiltrados();
   document.getElementById('st-total').textContent = leads.length;
   document.getElementById('st-alta').textContent = leads.filter(l => l.prioridad === 'alta').length;
-  document.getElementById('st-tf').textContent = leads.filter(l => l.resenas >= 50 && l.rating >= 4.0).length;
+  document.getElementById('st-tf').textContent = leads.filter(l => cumpleCriterios(l)).length;
+  document.getElementById('st-listos').textContent = leads.filter(l => cumpleCriterios(l) && l.reserva_online === 'no').length;
   document.getElementById('showing').textContent = f.length;
 
   const empty = document.getElementById('empty');
@@ -861,6 +872,10 @@ function render() {
   tabla.style.display = f.length === 0 ? 'none' : '';
 
   document.getElementById('tbody').innerHTML = f.map((l, i) => {
+    const precioMap = { 0: '—', 1: '€', 2: '€€', 3: '€€€', 4: '€€€€', '-1': '?' };
+    const precioOkColor = (l.price_level === -1 || l.price_level >= 2) ? 'var(--texto)' : 'var(--rojo)';
+    const precioCell = `<span style="color:${precioOkColor};font-size:0.65rem;">${precioMap[l.price_level] || '?'}</span>`;
+
     const ratingColor = l.rating >= 4.0 ? 'var(--verde)' : l.rating >= 3.5 ? 'var(--amarillo)' : 'var(--rojo)';
     const ratingCell = l.rating > 0
       ? `<span style="color:${ratingColor};font-size:0.68rem;font-weight:500;">${l.rating.toFixed(1)}</span>`
@@ -1117,13 +1132,15 @@ async function generar(canal) {
   const turismoIntl = currentLead.turismo_intl === 'si';
   const sinReservaOnline = currentLead.reserva_online === 'no';
 
+  const priceLevelTexto = { 2: 'ticket medio', 3: 'ticket alto', 4: 'ticket muy alto' };
   const contextoExtra = [
     comoReservan === 'telefono' ? 'Reservan solo por teléfono — se les escapan llamadas.' : '',
     comoReservan === 'whatsapp' ? 'Gestionan reservas por WhatsApp personal — es lento y caótico.' : '',
-    ticketMedio === 'alto' ? 'Ticket medio alto — cada reserva perdida duele más.' : '',
-    ticketMedio === 'medio' ? 'Ticket medio.' : '',
-    turismoIntl ? 'Zona turística con clientela internacional — el idioma es una barrera.' : '',
-    sinReservaOnline ? 'Sin sistema de reservas online.' : ''
+    ticketMedio === 'alto' || currentLead.price_level >= 3 ? 'Ticket medio-alto — cada reserva perdida son muchos euros.' : '',
+    ticketMedio === 'medio' || currentLead.price_level === 2 ? 'Ticket medio.' : '',
+    turismoIntl ? 'Zona turística con clientela internacional — el idioma es una barrera real.' : '',
+    sinReservaOnline || currentLead.reserva_online === 'nd' ? 'Sin sistema de reservas online detectado.' : '',
+    currentLead.resenas >= 100 ? `Restaurante consolidado con ${currentLead.resenas} reseñas — saben lo que hacen.` : ''
   ].filter(Boolean).join(' ');
 
   // Argumento central según TheFork
