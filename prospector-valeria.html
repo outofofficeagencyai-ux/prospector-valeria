@@ -343,6 +343,14 @@
     </div>
 
     <div>
+      <div class="slabel">Anthropic API Key</div>
+      <div class="igroup">
+        <div class="ilabel">Key para generar mensajes</div>
+        <input type="password" id="anthropic-key" placeholder="sk-ant-...">
+      </div>
+    </div>
+
+    <div>
       <div class="slabel">Añadir manual</div>
       <div class="igroup"><div class="ilabel">Nombre</div><input type="text" id="m-nombre" placeholder="Restaurante El Mar"></div>
       <div class="igroup" style="margin-top:0.4rem;"><div class="ilabel">Web</div><input type="url" id="m-web" placeholder="https://..."></div>
@@ -627,6 +635,8 @@ function setP(fill, msg, pct, text) { fill.style.width = pct + '%'; msg.textCont
 // ─── BUSCAR INSTAGRAM ─────────────────────────────────────────────────────────
 async function buscarInstagram() {
   if (!currentLead) return;
+  const anthropicKey = document.getElementById('anthropic-key').value.trim();
+  if (!anthropicKey) { alert('Añade tu Anthropic API Key en el panel izquierdo'); return; }
   const btn = document.getElementById('btn-find-ig');
   const info = document.getElementById('ig-found-info');
   btn.textContent = '🔍 Buscando...';
@@ -638,7 +648,7 @@ async function buscarInstagram() {
     // Usamos la API de Claude para hacer la búsqueda inteligente
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-api-key': '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', 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      headers: { 'Content-Type': 'application/json', 'x-api-key': '' + document.getElementById('anthropic-key').value.trim() + '', 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 200,
@@ -927,6 +937,8 @@ function setTono(el, canal) {
 // ─── GENERADOR IA ─────────────────────────────────────────────────────────────
 async function generar(canal) {
   if (!currentLead) return;
+  const anthropicKey = document.getElementById('anthropic-key').value.trim();
+  if (!anthropicKey) { alert('Añade tu Anthropic API Key en el panel izquierdo para generar mensajes'); return; }
 
   const outEl = document.getElementById(`out-${canal}`);
   const ctxEl = document.getElementById(`ctx-${canal}`);
@@ -1010,7 +1022,7 @@ REGLAS ESTRICTAS:
   try {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-api-key': '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', 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      headers: { 'Content-Type': 'application/json', 'x-api-key': '' + document.getElementById('anthropic-key').value.trim() + '', 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 1000,
