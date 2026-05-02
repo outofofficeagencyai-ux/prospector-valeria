@@ -596,10 +596,10 @@ let tfModalActual = 'nd';
 
 try { leads = JSON.parse(localStorage.getItem('pv-leads3') || '[]'); } catch(e) {}
 
-// ─const CADENAS = ["subway","mcdonald","burger king","kfc","pizza hut","domino","telepizza","fosters","vips","starbucks","dunkin","five guys","popeyes","taco bell","hard rock cafe","hooters","sushi daily","pans","la tagliatella","grosso napoletano"];
+//
 function esCadena(nombre) { return CADENAS.some(c => nombre.toLowerCase().includes(c)); }
 
-// ─── PRIORIDAD ────────────────────────────────────────────────────────────────
+//
 function calcPrioridad(l) {
   const buenasResenas = l.resenas >= 50;
   const buenaPuntuacion = l.rating >= 4.0;
@@ -624,7 +624,7 @@ function getArgumento(l) {
   return null;
 }
 
-// ─── BUSCAR API ───────────────────────────────────────────────────────────────
+//
 async function buscar() {
   const key = document.getElementById('api-key').value.trim();
   const zona = document.getElementById('zona').value.trim();
@@ -746,7 +746,7 @@ function loadGoogleMaps(key) {
 
 function setP(fill, msg, pct, text) { fill.style.width = pct + '%'; msg.textContent = text; }
 
-// ─── BUSCAR INSTAGRAM ─────────────────────────────────────────────────────────
+//
 async function buscarInstagram() {
   if (!currentLead) return;
   const anthropicKey = document.getElementById('anthropic-key').value.trim();
@@ -805,7 +805,7 @@ Devuelve SOLO el handle de Instagram (ej: @nombrerestaurante) o la URL completa 
   btn.disabled = false;
 }
 
-// ─── MANUAL ───────────────────────────────────────────────────────────────────
+//
 function addManual() {
   const nombre = document.getElementById('m-nombre').value.trim();
   if (!nombre) { alert('Escribe el nombre'); return; }
@@ -826,7 +826,7 @@ function addManual() {
   ['m-nombre','m-web','m-email','m-tel','m-zona'].forEach(id => document.getElementById(id).value = '');
 }
 
-// ─── FILTROS ──────────────────────────────────────────────────────────────────
+//
 function setFiltro(f, el) {
   filtro = f;
   document.querySelectorAll('.chip').forEach(c => c.classList.remove('on'));
@@ -847,7 +847,7 @@ function getFiltrados() {
   }
 }
 
-// ─── RENDER ───────────────────────────────────────────────────────────────────
+//
 function render() {
   const f = getFiltrados();
   document.getElementById('st-total').textContent = leads.length;
@@ -939,7 +939,7 @@ function render() {
   }).join('');
 }
 
-// ─── MODAL ────────────────────────────────────────────────────────────────────
+//
 function abrirModal(id, tab = 'seguimiento') {
   editId = id;
   currentLead = leads.find(x => x.id === id);
@@ -1098,7 +1098,7 @@ function setTono(el, canal) {
   tonos[canal] = el.dataset.tono;
 }
 
-// ─── GENERADOR IA ─────────────────────────────────────────────────────────────
+//
 async function generar(canal) {
   if (!currentLead) return;
   const anthropicKey = document.getElementById('anthropic-key').value.trim();
@@ -1235,7 +1235,7 @@ REGLAS ESTRICTAS:
   btn.textContent = { wa: '✦ Generar mensaje WhatsApp', em: '✦ Generar email', dm: '✦ Generar DM Instagram' }[canal];
 }
 
-// ─── UTILS ────────────────────────────────────────────────────────────────────
+//
 function borrar(id) { leads = leads.filter(l => l.id !== id); save(); render(); }
 function clearAll() { if (!confirm('¿Borrar todos los leads?')) return; leads = []; save(); render(); }
 function save() { try { localStorage.setItem('pv-leads3', JSON.stringify(leads)); } catch(e) {} }
