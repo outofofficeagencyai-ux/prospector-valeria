@@ -642,31 +642,20 @@ async function buscar() {
   setP(pf, pm, 8, 'Geocodificando zona...');
 
   try {
-    // Paso 1: Geocodificar
-    const geoRes = await fetch('https://maps.googleapis.com/maps/api/geocode/json?address=' + encodeURIComponent(zona) + '&key=' + key);
+    const SERVER = 'https://valeria-ai-production.up.railway.app';
+
+    // Paso 1: Geocodificar via servidor
+    const geoRes = await fetch(SERVER + '/prospector/geocode?address=' + encodeURIComponent(zona));
     const geoData = await geoRes.json();
     if (geoData.status !== 'OK') throw new Error('Zona no encontrada (' + geoData.status + ')');
     const loc = geoData.results[0].geometry.location;
     setP(pf, pm, 20, '✓ ' + geoData.results[0].formatted_address);
 
-    // Paso 2: Nueva Places API (Text Search)
-    const searchRes = await fetch('https://places.googleapis.com/v1/places:searchNearby', {
+    // Paso 2: Places via servidor
+    const searchRes = await fetch(SERVER + '/prospector/search', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Goog-Api-Key': key,
-        'X-Goog-FieldMask': 'places.id,places.displayName,places.rating,places.userRatingCount,places.priceLevel,places.websiteUri,places.nationalPhoneNumber,places.googleMapsUri,places.reservable'
-      },
-      body: JSON.stringify({
-        includedTypes: [tipo],
-        maxResultCount: 20,
-        locationRestriction: {
-          circle: {
-            center: { latitude: loc.lat, longitude: loc.lng },
-            radius: radio
-          }
-        }
-      })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ lat: loc.lat, lng: loc.lng, radio: radio, tipo: tipo })
     });
 
     const searchData = await searchRes.json();
