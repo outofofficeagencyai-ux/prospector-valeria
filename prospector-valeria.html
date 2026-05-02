@@ -597,7 +597,7 @@ let tfModalActual = 'nd';
 try { leads = JSON.parse(localStorage.getItem('pv-leads3') || '[]'); } catch(e) {}
 
 //
-const CADENAS = ["subway","mcdonald","burger king","kfc","pizza hut","domino","telepizza","fosters","vips","starbucks","dunkin","five guys","popeyes","taco bell","hard rock cafe","hooters","sushi daily","pans","la tagliatella","grosso napoletano","hotel","hostel","resort","aparthotel","centro comercial","harbour club","beach club","pool bar","snack bar","cafeteria","cafetería","panaderia","pasteleria","heladeria","kebab","chino","sushi","hamburgues","fast food","bocadillo","sandwich","cafe","café","bar ","pizzeria","pizzería","kebab","fish and chips","take away","takeaway","autoservicio","buffet libre"];
+const CADENAS = ["subway","mcdonald","burger king","kfc","pizza hut","domino","telepizza","fosters","vips","starbucks","dunkin","five guys","popeyes","taco bell","hard rock cafe","hooters","sushi daily","pans","la tagliatella","grosso napoletano","hotel","hostel","resort","aparthotel","centro comercial","harbour club","beach club","pool bar","snack bar","cafeteria","cafetería","panaderia","pasteleria","heladeria","kebab","chino","sushi","hamburgues","fast food","bocadillo","sandwich","cafe","café","bar ","pizzeria","pizzería","kebab","fish and chips","take away","takeaway","autoservicio","buffet libre","gf ","gf fa","riu ","melia","iberostar","bahia","vincci","lopesan","hard rock","sheraton","hilton","marriott","radisson","occidental","dreamplace","spring hotel","be live"];
 function esCadena(nombre) { return CADENAS.some(c => nombre.toLowerCase().includes(c)); }
 
 //
@@ -666,7 +666,10 @@ async function buscar() {
         type: tipo,
         language: 'es'
       }, (results, status) => {
-        if (status === google.maps.places.PlacesServiceStatus.OK) res(results);
+        if (status === google.maps.places.PlacesServiceStatus.OK) {
+          if (results[0]) console.log('Sample place:', results[0].name, 'rating:', results[0].rating, 'reviews:', results[0].user_ratings_total, 'price:', results[0].price_level);
+          res(results);
+        }
         else if (status === google.maps.places.PlacesServiceStatus.ZERO_RESULTS) res([]);
         else rej(new Error('Places API: ' + status));
       });
