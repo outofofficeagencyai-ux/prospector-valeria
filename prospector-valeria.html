@@ -688,9 +688,9 @@ async function buscar() {
         });
       });
 
-      const rating = d.rating || p.rating || 0;
-      const reseñas = d.user_ratings_total || p.user_ratings_total || 0;
-      const priceLevel = d.price_level !== undefined ? d.price_level : (p.price_level !== undefined ? p.price_level : -1);
+      const rating = p.rating || 0;
+      const reseñas = p.user_ratings_total || 0;
+      const priceLevel = p.price_level !== undefined ? p.price_level : -1;
       const reservable = d.reservable || false;
       const lead = {
         id: Date.now() + Math.random(),
