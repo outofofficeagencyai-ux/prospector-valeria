@@ -299,7 +299,7 @@
   <div class="stats">
     <div class="stat"><div class="stat-n" id="st-total">0</div><div class="stat-l">Leads</div></div>
     <div class="stat"><div class="stat-n" id="st-alta">0</div><div class="stat-l">Alta prioridad</div></div>
-    <div class="stat"><div class="stat-n" id="st-tf">0</div><div class="stat-l">Sin TheFork</div></div>
+    <div class="stat"><div class="stat-n" id="st-tf">0</div><div class="stat-l">Calificados</div></div>
   </div>
 </header>
 
@@ -381,6 +381,7 @@
       <button class="chip" onclick="setFiltro('con-tf',this)">⟲ Con TheFork</button>
       <button class="chip" onclick="setFiltro('web',this)">🌐 Con web</button>
       <button class="chip" onclick="setFiltro('ig',this)">📸 Con Instagram</button>
+      <button class="chip" onclick="setFiltro('calificados',this)">✦ Calificados</button>
       <div class="rcount">Mostrando <b id="showing">0</b> leads</div>
       <button class="btn-csv" onclick="exportCSV()">↓ CSV</button>
     </div>
@@ -392,7 +393,10 @@
             <th>#</th>
             <th>Restaurante</th>
             <th>Zona</th>
+            <th>⭐ Punt.</th>
+            <th>💬 Reseñas</th>
             <th>Web</th>
+            <th>Reserva</th>
             <th>TheFork</th>
             <th>Argumento</th>
             <th>Canales</th>
@@ -430,6 +434,51 @@
 
     <!-- SEGUIMIENTO -->
     <div class="tab-panel on" id="tab-seguimiento">
+      <!-- CHECKLIST DE CALIFICACIÓN -->
+      <div style="background:var(--gris2);border:1px solid #252525;border-radius:6px;padding:0.8rem;display:flex;flex-direction:column;gap:0.6rem;">
+        <div style="font-size:0.5rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--champagne-dark);">Checklist de calificación</div>
+        
+        <div class="igroup">
+          <div class="ilabel">¿Tiene reserva online? (web/TheFork/otro)</div>
+          <div class="tf-toggle">
+            <button class="tf-opt" id="ro-nd" onclick="setReservaOnline('nd')">No verificado</button>
+            <button class="tf-opt" id="ro-no" onclick="setReservaOnline('no')">✗ No tiene</button>
+            <button class="tf-opt" id="ro-si" onclick="setReservaOnline('si')">✓ Sí tiene</button>
+          </div>
+        </div>
+
+        <div class="igroup">
+          <div class="ilabel">¿Cómo reservan ahora?</div>
+          <select id="modal-como-reservan">
+            <option value="">Sin verificar</option>
+            <option value="telefono">📞 Solo teléfono</option>
+            <option value="whatsapp">💬 WhatsApp manual</option>
+            <option value="thefork">🍴 TheFork</option>
+            <option value="web-propia">🌐 Formulario web propio</option>
+            <option value="otro">Otro sistema</option>
+          </select>
+        </div>
+
+        <div class="igroup">
+          <div class="ilabel">Ticket medio aproximado</div>
+          <select id="modal-ticket">
+            <option value="">Sin verificar</option>
+            <option value="bajo">€ Bajo (menos de 20€/persona)</option>
+            <option value="medio">€€ Medio (20-40€/persona)</option>
+            <option value="alto">€€€ Alto (más de 40€/persona)</option>
+          </select>
+        </div>
+
+        <div class="igroup">
+          <div class="ilabel">¿Turismo internacional?</div>
+          <div class="tf-toggle">
+            <button class="tf-opt" id="ti-nd" onclick="setTurismoIntl('nd')">Sin verificar</button>
+            <button class="tf-opt" id="ti-no" onclick="setTurismoIntl('no')">Local</button>
+            <button class="tf-opt" id="ti-si" onclick="setTurismoIntl('si')">Internacional</button>
+          </div>
+        </div>
+      </div>
+
       <div class="igroup">
         <div class="ilabel">¿Está en TheFork?</div>
         <div class="tf-toggle">
@@ -546,12 +595,19 @@ try { leads = JSON.parse(localStorage.getItem('pv-leads3') || '[]'); } catch(e) 
 
 // ─── PRIORIDAD ────────────────────────────────────────────────────────────────
 function calcPrioridad(l) {
-  const web = l.web && l.web.startsWith('http');
-  const tel = l.telefono && l.telefono.length > 4;
-  const ig = l.instagram && l.instagram.length > 2;
-  // Ambos casos son alta prioridad, pero por razones distintas
-  if (web || tel || ig) return 'alta';
+  const buenasResenas = l.resenas >= 50;
+  const buenaPuntuacion = l.rating >= 4.0;
+  const sinReservaOnline = l.reserva_online === 'no';
+  const tieneContacto = (l.web && l.web.startsWith('http')) || (l.telefono && l.telefono.length > 4) || (l.instagram && l.instagram.length > 2);
+  
+  if (buenasResenas && buenaPuntuacion && sinReservaOnline) return 'alta';
+  if (buenasResenas && buenaPuntuacion && tieneContacto) return 'media';
+  if (buenasResenas || buenaPuntuacion) return 'media';
   return 'baja';
+}
+
+function cumpleCriterios(l) {
+  return l.resenas >= 50 && l.rating >= 4.0;
 }
 
 function getArgumento(l) {
@@ -617,12 +673,14 @@ async function buscar() {
       const d = await new Promise((res) => {
         service.getDetails({
           placeId: p.place_id,
-          fields: ['name', 'website', 'formatted_phone_number', 'url']
+          fields: ['name', 'website', 'formatted_phone_number', 'url', 'rating', 'user_ratings_total', 'reservable', 'serves_beer']
         }, (result, status) => {
           res(status === google.maps.places.PlacesServiceStatus.OK ? result : {});
         });
       });
 
+      const rating = d.rating || p.rating || 0;
+      const reseñas = d.user_ratings_total || p.user_ratings_total || 0;
       const lead = {
         id: Date.now() + Math.random(),
         nombre: d.name || p.name,
@@ -633,6 +691,12 @@ async function buscar() {
         instagram: '',
         thefork: 'nd',
         maps_url: d.url || '',
+        rating: rating,
+        resenas: reseñas,
+        reserva_online: 'nd',
+        como_reservan: '',
+        ticket_medio: '',
+        turismo_intl: 'nd',
         notas: '', estado: '',
         ts: new Date().toLocaleDateString('es-ES')
       };
@@ -765,6 +829,7 @@ function getFiltrados() {
     case 'con-tf': return leads.filter(l => l.thefork === 'si');
     case 'web': return leads.filter(l => l.web && l.web.startsWith('http'));
     case 'ig': return leads.filter(l => l.instagram && l.instagram.length > 2);
+    case 'calificados': return leads.filter(l => l.resenas >= 50 && l.rating >= 4.0);
     default: return leads;
   }
 }
@@ -774,7 +839,7 @@ function render() {
   const f = getFiltrados();
   document.getElementById('st-total').textContent = leads.length;
   document.getElementById('st-alta').textContent = leads.filter(l => l.prioridad === 'alta').length;
-  document.getElementById('st-tf').textContent = leads.filter(l => l.thefork === 'no').length;
+  document.getElementById('st-tf').textContent = leads.filter(l => l.resenas >= 50 && l.rating >= 4.0).length;
   document.getElementById('showing').textContent = f.length;
 
   const empty = document.getElementById('empty');
@@ -783,6 +848,21 @@ function render() {
   tabla.style.display = f.length === 0 ? 'none' : '';
 
   document.getElementById('tbody').innerHTML = f.map((l, i) => {
+    const ratingColor = l.rating >= 4.0 ? 'var(--verde)' : l.rating >= 3.5 ? 'var(--amarillo)' : 'var(--rojo)';
+    const ratingCell = l.rating > 0
+      ? `<span style="color:${ratingColor};font-size:0.68rem;font-weight:500;">${l.rating.toFixed(1)}</span>`
+      : `<span style="color:#222;font-size:0.56rem;">—</span>`;
+    const resenasColor = l.resenas >= 50 ? 'var(--verde)' : 'var(--amarillo)';
+    const resenasCell = l.resenas > 0
+      ? `<span style="color:${resenasColor};font-size:0.65rem;">${l.resenas}</span>`
+      : `<span style="color:#222;font-size:0.56rem;">—</span>`;
+
+    const reservaCell = l.reserva_online === 'no'
+      ? `<span style="background:rgba(74,222,128,0.1);color:var(--verde);border:1px solid rgba(74,222,128,0.2);padding:2px 6px;border-radius:3px;font-size:0.5rem;">✗ Sin reserva</span>`
+      : l.reserva_online === 'si'
+      ? `<span style="background:rgba(248,113,113,0.08);color:var(--rojo);border:1px solid rgba(248,113,113,0.15);padding:2px 6px;border-radius:3px;font-size:0.5rem;">✓ Tiene</span>`
+      : `<span style="color:#2a2a2a;font-size:0.54rem;">Verificar</span>`;
+
     const webCell = l.web && l.web.startsWith('http')
       ? `<a href="${l.web}" target="_blank">${l.web.replace(/https?:\/\/(www\.)?/,'').substring(0,20)}${l.web.length>26?'…':''}</a>`
       : `<span style="color:#222;font-size:0.56rem;">—</span>`;
@@ -867,7 +947,11 @@ function abrirModal(id, tab = 'seguimiento') {
   document.getElementById('modal-estado').value = currentLead.estado || '';
   document.getElementById('modal-email').value = currentLead.email || '';
   document.getElementById('modal-ig').value = currentLead.instagram || '';
+  document.getElementById('modal-como-reservan').value = currentLead.como_reservan || '';
+  document.getElementById('modal-ticket').value = currentLead.ticket_medio || '';
   setTFModal(currentLead.thefork || 'nd');
+  setReservaOnline(currentLead.reserva_online || 'nd');
+  setTurismoIntl(currentLead.turismo_intl || 'nd');
 
   // Info argumento en tabs de mensajes
   actualizarArgInfos();
@@ -925,6 +1009,24 @@ function setTFModal(val) {
   });
 }
 
+function setReservaOnline(val) {
+  if (currentLead) currentLead.reserva_online = val;
+  ['nd','no','si'].forEach(v => {
+    const btn = document.getElementById('ro-' + v);
+    if (!btn) return;
+    btn.className = 'tf-opt' + (v === val ? (v === 'si' ? ' on-si' : v === 'no' ? ' on-no' : '') : '');
+  });
+}
+
+function setTurismoIntl(val) {
+  if (currentLead) currentLead.turismo_intl = val;
+  ['nd','no','si'].forEach(v => {
+    const btn = document.getElementById('ti-' + v);
+    if (!btn) return;
+    btn.className = 'tf-opt' + (v === val ? (v === 'si' ? ' on-si' : v === 'no' ? ' on-no' : '') : '');
+  });
+}
+
 function setTF(val) {
   setTFModal(val);
   if (currentLead) {
@@ -961,6 +1063,12 @@ function guardarModal() {
   l.email = document.getElementById('modal-email').value || l.email;
   l.instagram = document.getElementById('modal-ig').value || l.instagram;
   l.thefork = tfModalActual;
+  l.como_reservan = document.getElementById('modal-como-reservan').value;
+  l.ticket_medio = document.getElementById('modal-ticket').value;
+  if (currentLead) {
+    l.reserva_online = currentLead.reserva_online || l.reserva_online;
+    l.turismo_intl = currentLead.turismo_intl || l.turismo_intl;
+  }
   l.prioridad = calcPrioridad(l);
   save(); render(); cerrarModal();
 }
@@ -991,6 +1099,19 @@ async function generar(canal) {
   const tieneTF = currentLead.thefork === 'si';
   const noTF = currentLead.thefork === 'no';
   const ig = currentLead.instagram || '';
+  const comoReservan = currentLead.como_reservan || '';
+  const ticketMedio = currentLead.ticket_medio || '';
+  const turismoIntl = currentLead.turismo_intl === 'si';
+  const sinReservaOnline = currentLead.reserva_online === 'no';
+
+  const contextoExtra = [
+    comoReservan === 'telefono' ? 'Reservan solo por teléfono — se les escapan llamadas.' : '',
+    comoReservan === 'whatsapp' ? 'Gestionan reservas por WhatsApp personal — es lento y caótico.' : '',
+    ticketMedio === 'alto' ? 'Ticket medio alto — cada reserva perdida duele más.' : '',
+    ticketMedio === 'medio' ? 'Ticket medio.' : '',
+    turismoIntl ? 'Zona turística con clientela internacional — el idioma es una barrera.' : '',
+    sinReservaOnline ? 'Sin sistema de reservas online.' : ''
+  ].filter(Boolean).join(' ');
 
   // Argumento central según TheFork
   const argumentoCentral = tieneTF
