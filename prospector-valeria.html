@@ -563,7 +563,9 @@
     <!-- DM INSTAGRAM -->
     <div class="tab-panel" id="tab-dm">
       <div id="ig-found-info" style="font-size:0.6rem;color:var(--texto);padding:0.4rem 0;"></div>
-      <button class="btn-sec" id="btn-find-ig" onclick="buscarInstagram()" style="margin-bottom:0.2rem;">🔍 Buscar Instagram automáticamente</button>
+      <button class="btn-sec" id="btn-find-tf" onclick="buscarTheFork()" style="margin-bottom:0.2rem;">🔍 Buscar TheFork automáticamente</button>
+<div id="tf-found-info" style="font-size:0.8rem;margin-bottom:0.5rem;"></div>
+<button class="btn-sec" id="btn-find-ig" onclick="buscarInstagram()" style="margin-bottom:0.2rem;">🔍 Buscar Instagram automáticamente</button>
       <div id="dm-arg-info" style="font-size:0.58rem;padding:0.5rem 0.7rem;border-radius:4px;line-height:1.6;"></div>
       <div>
         <div class="ilabel" style="margin-bottom:0.4rem;">Tono</div>
@@ -715,6 +717,47 @@ async function buscar() {
 function setP(fill, msg, pct, text) { fill.style.width = pct + '%'; msg.textContent = text; }
 
 //
+async function buscarTheFork() {
+  if (!currentLead) return;
+  const anthropicKey = document.getElementById('anthropic-key').value.trim();
+  if (!anthropicKey) { alert('Añade tu Anthropic API Key en el panel izquierdo'); return; }
+  const btn = document.getElementById('btn-find-tf');
+  const info = document.getElementById('tf-found-info');
+  btn.textContent = '🔍 Buscando...';
+  btn.disabled = true;
+  info.textContent = 'Buscando en TheFork...';
+  info.style.color = 'var(--texto)';
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': anthropicKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 200,
+        tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+        messages: [{ role: 'user', content: `Busca en TheFork.es si el restaurante "${currentLead.nombre}" en ${currentLead.zona}, España está registrado. Responde SOLO: SI_TIENE o NO_TIENE` }]
+      })
+    });
+    const data = await res.json();
+    const texto = data.content?.filter(b => b.type === 'text').map(b => b.text).join('') || '';
+    const tieneTF = texto.includes('SI_TIENE');
+    const val = tieneTF ? 'si' : 'no';
+    currentLead.thefork = val;
+    tfModalActual = val;
+    const l = leads.find(x => x.id === currentLead.id);
+    if (l) { l.thefork = val; save(); render(); }
+    document.querySelectorAll('[data-tf]').forEach(b => b.classList.remove('on'));
+    document.querySelector(`[data-tf="${val}"]`)?.classList.add('on');
+    info.textContent = tieneTF ? '✓ Sí está en TheFork' : '✗ No está en TheFork';
+    info.style.color = tieneTF ? 'var(--verde)' : 'var(--amarillo)';
+  } catch(err) {
+    info.textContent = `✗ Error: ${err.message}`;
+    info.style.color = 'var(--rojo)';
+  }
+  btn.textContent = '🔍 Buscar TheFork';
+  btn.disabled = false;
+}
+
 async function buscarInstagram() {
   if (!currentLead) return;
   const anthropicKey = document.getElementById('anthropic-key').value.trim();
