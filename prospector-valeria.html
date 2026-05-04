@@ -565,6 +565,9 @@
       <div id="ig-found-info" style="font-size:0.6rem;color:var(--texto);padding:0.4rem 0;"></div>
       <button class="btn-sec" id="btn-find-tf" onclick="buscarTheFork()" style="margin-bottom:0.2rem;">🔍 Buscar TheFork automáticamente</button>
 <div id="tf-found-info" style="font-size:0.8rem;margin-bottom:0.5rem;"></div>
+<button class="btn-sec" id="btn-find-reserva" onclick="buscarWebReservas()" style="margin-bottom:0.2rem;">🔍 Buscar web de reservas</button>
+<div id="reserva-found-info" style="font-size:0.8rem;margin-bottom:0.5rem;"></div>
+<div id="tf-found-info" style="font-size:0.8rem;margin-bottom:0.5rem;"></div>
 <button class="btn-sec" id="btn-find-ig" onclick="buscarInstagram()" style="margin-bottom:0.2rem;">🔍 Buscar Instagram automáticamente</button>
       <div id="dm-arg-info" style="font-size:0.58rem;padding:0.5rem 0.7rem;border-radius:4px;line-height:1.6;"></div>
       <div>
@@ -588,7 +591,7 @@
 </div>
 
 <script>
-let leads = [];
+let leads = JSON.parse(localStorage.getItem('pv-leads3') || '[]');
 let filtro = 'todos';
 let editId = null;
 let currentLead = null;
@@ -717,6 +720,43 @@ async function buscar() {
 function setP(fill, msg, pct, text) { fill.style.width = pct + '%'; msg.textContent = text; }
 
 //
+async function buscarWebReservas() {
+  if (!currentLead) return;
+  const anthropicKey = document.getElementById('anthropic-key').value.trim();
+  if (!anthropicKey) { alert('Añade tu Anthropic API Key'); return; }
+  const btn = document.getElementById('btn-find-reserva');
+  const info = document.getElementById('reserva-found-info');
+  btn.textContent = '🔍 Buscando...';
+  btn.disabled = true;
+  info.textContent = 'Buscando sistema de reservas...';
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': anthropicKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-5',
+        max_tokens: 200,
+        tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+        messages: [{ role: 'user', content: `Busca si el restaurante "${currentLead.nombre}" en ${currentLead.zona}, España${currentLead.web ? ` (web: ${currentLead.web})` : ''} tiene sistema de reservas online propio: widget en su web, Cover Manager, Restoo, Bookline, o similar. NO contar TheFork. Responde SOLO: SI_TIENE o NO_TIENE` }]
+      })
+    });
+    const data = await res.json();
+    const texto = data.content?.filter(b => b.type === 'text').map(b => b.text).join('') || '';
+    const tiene = texto.includes('SI_TIENE');
+    const val = tiene ? 'si' : 'no';
+    currentLead.reserva_online = val;
+    const l = leads.find(x => x.id === currentLead.id);
+    if (l) { l.reserva_online = val; save(); render(); }
+    info.textContent = tiene ? '✓ Sí tiene sistema de reservas propio' : '✗ No tiene sistema de reservas propio';
+    info.style.color = tiene ? 'var(--verde)' : 'var(--amarillo)';
+  } catch(err) {
+    info.textContent = `✗ Error: ${err.message}`;
+    info.style.color = 'var(--rojo)';
+  }
+  btn.textContent = '🔍 Buscar web de reservas';
+  btn.disabled = false;
+}
+
 async function buscarTheFork() {
   if (!currentLead) return;
   const anthropicKey = document.getElementById('anthropic-key').value.trim();
