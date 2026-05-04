@@ -567,7 +567,6 @@
 <div id="tf-found-info" style="font-size:0.8rem;margin-bottom:0.5rem;"></div>
 <button class="btn-sec" id="btn-find-reserva" onclick="buscarWebReservas()" style="margin-bottom:0.2rem;">🔍 Buscar web de reservas</button>
 <div id="reserva-found-info" style="font-size:0.8rem;margin-bottom:0.5rem;"></div>
-<div id="tf-found-info" style="font-size:0.8rem;margin-bottom:0.5rem;"></div>
 <button class="btn-sec" id="btn-find-ig" onclick="buscarInstagram()" style="margin-bottom:0.2rem;">🔍 Buscar Instagram automáticamente</button>
       <div id="dm-arg-info" style="font-size:0.58rem;padding:0.5rem 0.7rem;border-radius:4px;line-height:1.6;"></div>
       <div>
@@ -734,13 +733,15 @@ async function buscarWebReservas() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': anthropicKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-5',
-        max_tokens: 200,
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 400,
+        system: 'Eres un asistente que investiga restaurantes. Siempre terminas tu respuesta con exactamente SI_TIENE o NO_TIENE en una línea aparte.',
         tools: [{ type: 'web_search_20250305', name: 'web_search' }],
-        messages: [{ role: 'user', content: `Busca si el restaurante "${currentLead.nombre}" en ${currentLead.zona}, España${currentLead.web ? ` (web: ${currentLead.web})` : ''} tiene sistema de reservas online propio: widget en su web, Cover Manager, Restoo, Bookline, o similar. NO contar TheFork. Responde SOLO: SI_TIENE o NO_TIENE` }]
+        messages: [{ role: 'user', content: `Busca si el restaurante "${currentLead.nombre}" en ${currentLead.zona}, España${currentLead.web ? ` (web: ${currentLead.web})` : ''} tiene sistema de reservas online propio (widget en su web, Cover Manager, Restoo, Bookline, ElTenedor widget, o botón "Reservar" propio). NO contar TheFork como sistema propio. Busca en Google "${currentLead.nombre} ${currentLead.zona} reserva online". Al final responde en una línea sola: SI_TIENE o NO_TIENE` }]
       })
     });
     const data = await res.json();
+    if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
     const texto = data.content?.filter(b => b.type === 'text').map(b => b.text).join('') || '';
     const tiene = texto.includes('SI_TIENE');
     const val = tiene ? 'si' : 'no';
@@ -772,13 +773,15 @@ async function buscarTheFork() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': anthropicKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-5',
-        max_tokens: 200,
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 400,
+        system: 'Eres un asistente que investiga restaurantes. Siempre terminas tu respuesta con exactamente SI_TIENE o NO_TIENE en una línea aparte.',
         tools: [{ type: 'web_search_20250305', name: 'web_search' }],
-        messages: [{ role: 'user', content: `Busca en TheFork.es si el restaurante "${currentLead.nombre}" en ${currentLead.zona}, España está registrado. Responde SOLO: SI_TIENE o NO_TIENE` }]
+        messages: [{ role: 'user', content: `Busca en Google "site:thefork.es ${currentLead.nombre} ${currentLead.zona}" y también busca "${currentLead.nombre} ${currentLead.zona} thefork" para saber si este restaurante español está registrado en TheFork (ElTenedor). Al final responde en una línea sola: SI_TIENE o NO_TIENE` }]
       })
     });
     const data = await res.json();
+    if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
     const texto = data.content?.filter(b => b.type === 'text').map(b => b.text).join('') || '';
     const tieneTF = texto.includes('SI_TIENE');
     const val = tieneTF ? 'si' : 'no';
@@ -815,19 +818,19 @@ async function buscarInstagram() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': '' + document.getElementById('anthropic-key').value.trim() + '', 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-5',
-        max_tokens: 200,
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 400,
+        system: 'Eres un asistente que encuentra perfiles de Instagram de restaurantes. Si encuentras el perfil, responde SOLO el handle con @ (ej: @nombrerestaurante). Si no encuentras nada con certeza, responde exactamente: NO_ENCONTRADO',
         tools: [{ type: 'web_search_20250305', name: 'web_search' }],
         messages: [{
           role: 'user',
-          content: `Busca en Google el perfil de Instagram del restaurante "${currentLead.nombre}" ubicado en ${currentLead.zona}, España.${currentLead.web ? ` Su web es ${currentLead.web}.` : ''}
-
-Devuelve SOLO el handle de Instagram (ej: @nombrerestaurante) o la URL completa de Instagram. Si no encuentras nada con seguridad, responde exactamente: NO_ENCONTRADO`
+          content: `Busca en Google el perfil de Instagram del restaurante "${currentLead.nombre}" en ${currentLead.zona}, España.${currentLead.web ? ` Su web es ${currentLead.web}.` : ''} Prueba buscar: "${currentLead.nombre} ${currentLead.zona} instagram". Devuelve SOLO el handle de Instagram (ej: @nombrerestaurante). Si no encuentras nada con seguridad, responde: NO_ENCONTRADO`
         }]
       })
     });
 
     const data = await res.json();
+    if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
     const texto = data.content?.filter(b => b.type === 'text').map(b => b.text).join('') || '';
 
     // Extraer handle/URL de Instagram
@@ -1254,14 +1257,15 @@ REGLAS ESTRICTAS:
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': '' + document.getElementById('anthropic-key').value.trim() + '', 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-5',
+        model: 'claude-sonnet-4-20250514',
         max_tokens: 1000,
         messages: [{ role: 'user', content: prompts[canal] }]
       })
     });
 
     const data = await res.json();
-    const texto = data.content?.[0]?.text || 'Error al generar.';
+    if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+    const texto = data.content?.filter(b => b.type === 'text').map(b => b.text).join('') || 'No se generó respuesta.';
 
     outEl.innerHTML = '';
     outEl.textContent = texto;
