@@ -733,11 +733,11 @@ async function buscarWebReservas() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': anthropicKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-5',
-        max_tokens: 400,
-        system: 'Eres un asistente que investiga restaurantes. Siempre terminas tu respuesta con exactamente SI_TIENE o NO_TIENE en una línea aparte.',
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 20,
+        system: 'Responde solo SI_TIENE o NO_TIENE.',
         tools: [{ type: 'web_search_20250305', name: 'web_search' }],
-        messages: [{ role: 'user', content: `Busca si el restaurante "${currentLead.nombre}" en ${currentLead.zona}, España${currentLead.web ? ` (web: ${currentLead.web})` : ''} tiene sistema de reservas online propio (widget en su web, Cover Manager, Restoo, Bookline, ElTenedor widget, o botón "Reservar" propio). NO contar TheFork como sistema propio. Busca en Google "${currentLead.nombre} ${currentLead.zona} reserva online". Al final responde en una línea sola: SI_TIENE o NO_TIENE` }]
+        messages: [{ role: 'user', content: `Reservas online propias (sin TheFork): "${currentLead.nombre}" ${currentLead.zona} España. SI_TIENE o NO_TIENE` }]
       })
     });
     const data = await res.json();
@@ -773,9 +773,9 @@ async function buscarTheFork() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': anthropicKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-5',
-        max_tokens: 400,
-        system: 'Eres un asistente que investiga restaurantes. Siempre terminas tu respuesta con exactamente SI_TIENE o NO_TIENE en una línea aparte.',
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 20,
+        system: 'Responde solo SI_TIENE o NO_TIENE.',
         tools: [{ type: 'web_search_20250305', name: 'web_search' }],
         messages: [{ role: 'user', content: `Busca en Google "site:thefork.es ${currentLead.nombre} ${currentLead.zona}" y también busca "${currentLead.nombre} ${currentLead.zona} thefork" para saber si este restaurante español está registrado en TheFork (ElTenedor). Al final responde en una línea sola: SI_TIENE o NO_TIENE` }]
       })
@@ -817,8 +817,8 @@ async function buscarInstagram() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': anthropicKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-5',
-        max_tokens: 400,
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 30,
         tools: [{ type: 'web_search_20250305', name: 'web_search' }],
         messages: [{ role: 'user', content: `Busca en Google "${currentLead.nombre} ${currentLead.zona} instagram site:instagram.com". Encuentra el handle oficial de Instagram de este restaurante. Responde ÚNICAMENTE con el handle en formato @handle, nada más. Si no lo encuentras con certeza, responde: NO_ENCONTRADO` }]
       })
