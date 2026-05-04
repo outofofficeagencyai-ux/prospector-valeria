@@ -733,7 +733,7 @@ async function buscarWebReservas() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': anthropicKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-5',
         max_tokens: 400,
         system: 'Eres un asistente que investiga restaurantes. Siempre terminas tu respuesta con exactamente SI_TIENE o NO_TIENE en una línea aparte.',
         tools: [{ type: 'web_search_20250305', name: 'web_search' }],
@@ -773,7 +773,7 @@ async function buscarTheFork() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': anthropicKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-5',
         max_tokens: 400,
         system: 'Eres un asistente que investiga restaurantes. Siempre terminas tu respuesta con exactamente SI_TIENE o NO_TIENE en una línea aparte.',
         tools: [{ type: 'web_search_20250305', name: 'web_search' }],
@@ -817,7 +817,7 @@ async function buscarInstagram() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': anthropicKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-5',
         max_tokens: 400,
         tools: [{ type: 'web_search_20250305', name: 'web_search' }],
         messages: [{ role: 'user', content: `Busca en Google "${currentLead.nombre} ${currentLead.zona} instagram site:instagram.com". Encuentra el handle oficial de Instagram de este restaurante. Responde ÚNICAMENTE con el handle en formato @handle, nada más. Si no lo encuentras con certeza, responde: NO_ENCONTRADO` }]
