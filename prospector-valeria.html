@@ -813,41 +813,31 @@ async function buscarInstagram() {
   info.style.color = 'var(--texto)';
 
   try {
-    // Usamos la API de Claude para hacer la búsqueda inteligente
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-api-key': '' + document.getElementById('anthropic-key').value.trim() + '', 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      headers: { 'Content-Type': 'application/json', 'x-api-key': anthropicKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 400,
-        system: 'Eres un asistente que encuentra perfiles de Instagram de restaurantes. Si encuentras el perfil, responde SOLO el handle con @ (ej: @nombrerestaurante). Si no encuentras nada con certeza, responde exactamente: NO_ENCONTRADO',
         tools: [{ type: 'web_search_20250305', name: 'web_search' }],
-        messages: [{
-          role: 'user',
-          content: `Busca en Google el perfil de Instagram del restaurante "${currentLead.nombre}" en ${currentLead.zona}, España.${currentLead.web ? ` Su web es ${currentLead.web}.` : ''} Prueba buscar: "${currentLead.nombre} ${currentLead.zona} instagram". Devuelve SOLO el handle de Instagram (ej: @nombrerestaurante). Si no encuentras nada con seguridad, responde: NO_ENCONTRADO`
-        }]
+        messages: [{ role: 'user', content: `Busca en Google "${currentLead.nombre} ${currentLead.zona} instagram site:instagram.com". Encuentra el handle oficial de Instagram de este restaurante. Responde ÚNICAMENTE con el handle en formato @handle, nada más. Si no lo encuentras con certeza, responde: NO_ENCONTRADO` }]
       })
     });
-
     const data = await res.json();
     if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
-    const texto = data.content?.filter(b => b.type === 'text').map(b => b.text).join('') || '';
-
-    // Extraer handle/URL de Instagram
-    const igMatch = texto.match(/@[\w.]+|instagram\.com\/[\w.]+/i);
+    const todoElTexto = JSON.stringify(data.content);
+    const igMatch = todoElTexto.match(/@([\w.]{3,30})(?="|\\|\/|\s)/);
     const igRaw = igMatch ? igMatch[0] : null;
-
-    if (igRaw && !texto.includes('NO_ENCONTRADO')) {
-      const igHandle = igRaw.startsWith('@') ? igRaw : '@' + igRaw.replace(/.*instagram\.com\//i, '').replace(/\//g, '');
+    if (igRaw && !todoElTexto.includes('NO_ENCONTRADO')) {
+      const igHandle = igRaw.startsWith('@') ? igRaw : '@' + igRaw;
       currentLead.instagram = igHandle;
       document.getElementById('modal-ig').value = igHandle;
       info.textContent = `✓ Encontrado: ${igHandle}`;
       info.style.color = 'var(--verde)';
-      // Guardar automáticamente
       const l = leads.find(x => x.id === currentLead.id);
       if (l) { l.instagram = igHandle; save(); render(); }
     } else {
-      info.textContent = '⚠ No encontrado automáticamente — añádelo manualmente arriba';
+      info.textContent = '⚠ No encontrado — añádelo manualmente';
       info.style.color = 'var(--amarillo)';
     }
   } catch(err) {
