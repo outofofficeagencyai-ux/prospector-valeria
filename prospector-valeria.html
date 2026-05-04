@@ -732,7 +732,7 @@ async function buscarTheFork() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': anthropicKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-5',
         max_tokens: 200,
         tools: [{ type: 'web_search_20250305', name: 'web_search' }],
         messages: [{ role: 'user', content: `Busca en TheFork.es si el restaurante "${currentLead.nombre}" en ${currentLead.zona}, España está registrado. Responde SOLO: SI_TIENE o NO_TIENE` }]
@@ -775,7 +775,7 @@ async function buscarInstagram() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': '' + document.getElementById('anthropic-key').value.trim() + '', 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-5',
         max_tokens: 200,
         tools: [{ type: 'web_search_20250305', name: 'web_search' }],
         messages: [{
@@ -1214,7 +1214,7 @@ REGLAS ESTRICTAS:
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': '' + document.getElementById('anthropic-key').value.trim() + '', 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-5',
         max_tokens: 1000,
         messages: [{ role: 'user', content: prompts[canal] }]
       })
